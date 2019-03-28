@@ -23,11 +23,11 @@ package.check <- lapply(packages, FUN = function(x) {
 data_dir <- "/Volumes/psych-cog/dsnlab/TAG/behavior"
 saliva_file <- "/Puberty/Saliva/Wave1/TAG_W1_Saliva_wide_cens_only4.csv"
 hair_file <- "/Puberty/Hair/Wave1/TAG_W1_Hair_processed.csv"
-#pds_file <- ""
-#pbip_file <- ""
-#ctq_file <- "/Questionnaires/Wave1/CTQ_Wave1.csv"
-#pss_file <- "/Questionnaires/Wave1/PSS_Wave1.csv"
-#free_lunch <- "/Demographics/ParentQ_SES/TAG_W1_SES_ParentQ.xlsx"
+pds_file <- "/Questionnaires/Wave1/PDS_Wave1.csv"
+pbip_file <- "/Questionnaires/Wave1/PBIP_Wave1.csv"
+ctq_file <- "/Questionnaires/Wave1/CTQ_Wave1.csv"
+pss_file <- "/Questionnaires/Wave1/PSS_Wave1.csv"
+free_lunch_file <- "/Demographics/ParentQ_SES/TAG_W1_SES_ParentQ.xlsx"
 
 # load and clean saliva data
 saliva_df <- import(paste0(data_dir, saliva_file))
@@ -58,14 +58,122 @@ hair_df$SID <- as.character(hair_df$SID)
 # merge hair and saliva data
 hormone_df <- full_join(saliva_mean_df, hair_df, by = "SID")
 
-# next load behavioral data
+# load physical maturation data
+pds_df <- import(paste0(data_dir, pds_file))
+pds_df <- pds_df[, c("tagid", "PDS_F1", "PDS_F2", "PDS_F3", "PDS_F4", "PDS_F6")] # did not include Q 5 re: timing
+colnames(pds_df) <- c("SID", "pds1_height", "pds2_hair", "pds3_skin", "pds4_breasts", "pds6_period")
 
-# run E-M across the hormone and pubertal item-level data
+pbip_df <- import(paste0(data_dir, pbip_file))
+pbip_df <- pbip_df[, c("tagid", "PBIP_1A", "PBIP_2A")]
+colnames(pds_df) <- c("SID", "pbip1_breasts", "pbip2_pubic_hair")
+
+# load ctq
+ctq_df <- import(paste0(data_dir, ctq_file))
+ctq_df <- ctq_df[order(ctq_df$tagid), ]# order by SID
+
+ctq_items = list( # EA
+                c("CTQ_3", #_calledstupid", 
+                   "CTQ_8", #_neverbeenborn", 
+                   "CTQ_14", #_familyinsulting",
+                   "CTQ_18", #_familyhatedme",
+                   "CTQ_25"), #_emotionallyabused"),
+                 # PA
+                 c("CTQ_17", #_beatenbadly",
+                   "CTQ_9", #_hithard",
+                   "CTQ_11", #_leftwithbruises",
+                   "CTQ_12", #_punishedwithbelt",
+                   "CTQ_15"), #_physicallyabused"),
+                 # SA
+                 c("CTQ_20", #_touchsexual",
+                   "CTQ_21", #_threatenedsexual",
+                   "CTQ_23", #_watchsexualthings",
+                   "CTQ_24", #_molested",
+                   "CTQ_27"), #_sexuallyabused"), 
+                 # EN
+                 c("CTQ_5", #_helpedfeelspecial",
+                   "CTQ_7", #_feltloved",
+                   "CTQ_13", #_familylookedout",
+                   "CTQ_19", #_familyclose",
+                   "CTQ_28"), #_familystrength"),
+                 # PN
+                 c("CTQ_1", #_notenoughtoeat",
+                   "CTQ_2", #_protectme",
+                   "CTQ_6", #_weardirtyclothes",
+                   "CTQ_26", #_takemetodoctor",
+                   "CTQ_4"), #_parentstoodrunk"),
+                # Denial
+                c("CTQ_10", #_nothingtochange",
+                  "CTQ_16", #_perfectchildhood",
+                  "CTQ_22")) #_bestfamily"))
+
+subscale_info = list(scales = c("EA", "PA", "SA", "EN", "PN"), 
+                     ctq_items = ctq_items)
+
+ctq_SID <- ctq_df$tagid
+ctq_df <- cbind(ctq_SID, ctq_df[, colnames(ctq_df) %in% unlist(ctq_items)])
+colnames(ctq_df)[1] = "SID"
+
+# items appear to have already been reverse-scored. if >2 missing per subscale, then the value is missing; if <3 per subscale, then value is mean imputed for that subscale. then add entire scale. 
+
+ctq_missing_vector <- list()
+ctq_subscale_imputed <- list()
+
+for (i in 1:length(subscale_info[[1]])){
+  subscale = subscale_info[[1]][i]
+  ctq_items = subscale_info[[2]][[i]]
+  
+  ctq_subscale_df <- cbind(ctq_SID, ctq_df[, colnames(ctq_df) %in% ctq_items])
+  
+  # count the number of nas
+  num_ctq_nas <- ctq_subscale_df %>% 
+    gather(., key = item, value = value, -ctq_SID) %>% 
+    group_by(ctq_SID) %>% 
+    summarise(total_ctq_na = sum(is.na(value)))
+
+  # if the number of nas is 1 or 2, mean imput values
+  ctq_na_vector <- c(which(num_ctq_nas$total_ctq_na == 1), which(num_ctq_nas$total_ctq_na == 2))
+  ctq_na_vector <- ctq_na_vector[order(ctq_na_vector)]
+  
+  # calculate mean values
+  mean_ctq_subscale <- ctq_subscale_df[ctq_na_vector, ] %>% 
+    gather(., key = item, value = value, -ctq_SID) %>% 
+    group_by(ctq_SID) %>% 
+    summarise(mean = mean(value, na.rm = TRUE))
+  
+  for (j in 1:length(ctq_na_vector)) {
+    idx = ctq_na_vector[j]
+    ctq_subscale_df[idx, which(is.na(ctq_subscale_df[idx, ]))] <- mean_ctq_subscale[j, ]$mean # if index is na replace w/ mean 
+  } # output looks weird bc some went out to two decimal places, but checked manually it works!
+
+    ctq_subscale_imputed[[i]] <- ctq_subscale_df
+    
+    # if the number of nas is 3 or more, save the SID number to be censored
+  ctq_missing_vector[i] <- c(which(num_ctq_nas$total_ctq_na > 2))
+}
+
+
+# sum scores imputed scores and replace with imputed values
+
+
+# load and clean pss 
+pss_df <- import(paste0(data_dir, pss_file))
+pss_df <- pss_df[, c("tagid", "PSS_1", "PSS_2", "PSS_3", "PSS_4", "PSS_5", "PSS_6", "PSS_7", "PSS_8", "PSS_9", "PSS_10")]
+colnames(pss_df)[1] = "SID"
+
+# load and clean free lunch data
+free_lunch_df <- import(paste0(data_dir, free_lunch_file))
+
+# make mega-spreadsheet with all the data, save as rds
+```
+
+```{r handling missing data}
+# run little's test of mcar across the whole thing
+
+# run E-M across the hormone and pubertal item-level data only 
 
 # save csv file with imputed data
 
-# set up and run CCA 
-
-# set up and run stability estimates
 
 ```
+
+new doc: set up and run CCA, set up and run stability estimates
