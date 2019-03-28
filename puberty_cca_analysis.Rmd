@@ -1,0 +1,71 @@
+---
+title: "puberty_cca"
+author: "Theresa Cheng"
+date: "3/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+packages = c("ggplot2", "tidyr", "dplyr", "knitr", "PMA", "rio")
+
+# load packages, install as needed
+package.check <- lapply(packages, FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+        install.packages(x, dependencies = TRUE)
+        library(x, character.only = TRUE) }})
+```
+
+```{r load data}
+
+# data files
+data_dir <- "/Volumes/psych-cog/dsnlab/TAG/behavior"
+saliva_file <- "/Puberty/Saliva/Wave1/TAG_W1_Saliva_wide_cens_only4.csv"
+hair_file <- "/Puberty/Hair/Wave1/TAG_W1_Hair_processed.csv"
+#pds_file <- ""
+#pbip_file <- ""
+#ctq_file <- "/Questionnaires/Wave1/CTQ_Wave1.csv"
+#pss_file <- "/Questionnaires/Wave1/PSS_Wave1.csv"
+#free_lunch <- "/Demographics/ParentQ_SES/TAG_W1_SES_ParentQ.xlsx"
+
+# load and clean saliva data
+saliva_df <- import(paste0(data_dir, saliva_file))
+saliva_df_EST <- saliva_df[, c("SID", "sal_EST_conc_ln_w_1", "sal_EST_conc_ln_w_2", "sal_EST_conc_ln_w_3", "sal_EST_conc_ln_w_4")]
+saliva_df_TEST <- saliva_df[, c("SID", "sal_TEST_conc_ln_w_1", "sal_TEST_conc_ln_w_2", "sal_TEST_conc_ln_w_3", "sal_TEST_conc_ln_w_4")]
+saliva_df_DHEA <- saliva_df[, c("SID", "sal_DHEA_conc_ln_w_1", "sal_DHEA_conc_ln_w_2", "sal_DHEA_conc_ln_w_3", "sal_DHEA_conc_ln_w_4")]
+
+find_saliva_mean <- function(saliva_df_hormone, hormone_name){
+  df <- gather(saliva_df_hormone, key = "week" , value = "concentration", -SID) %>% 
+  group_by(SID) %>% 
+  summarise(mean = mean(concentration, na.rm = TRUE))
+  df$SID <- as.character(df$SID)
+  colnames(df) <- c("SID", paste0("mean_saliva_", hormone_name))
+  return(df)
+}
+
+mean_EST <- find_saliva_mean(saliva_df_EST, "EST")
+mean_TEST <- find_saliva_mean(saliva_df_TEST, "TEST")
+mean_DHEA <- find_saliva_mean(saliva_df_DHEA, "DHEA")
+saliva_mean_df <- full_join(mean_EST, mean_TEST, by = "SID") %>%
+  full_join(., mean_DHEA, by = "SID")
+
+# load hair data
+hair_df <- import(paste0(data_dir, hair_file))
+hair_df <- spread(hair_df[, -3], hormone, concentration_ln)
+hair_df$SID <- as.character(hair_df$SID)
+
+# merge hair and saliva data
+hormone_df <- full_join(saliva_mean_df, hair_df, by = "SID")
+
+# next load behavioral data
+
+# run E-M across the hormone and pubertal item-level data
+
+# save csv file with imputed data
+
+# set up and run CCA 
+
+# set up and run stability estimates
+
+```
