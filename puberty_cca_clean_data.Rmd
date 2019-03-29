@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-packages = c("ggplot2", "tidyr", "dplyr", "knitr", "rio", "stringr")
+packages = c("tidyr", "dplyr", "rio", "stringr")
 
 # load packages, install as needed
 package.check <- lapply(packages, FUN = function(x) {
@@ -29,11 +29,20 @@ hair_file <- "/Puberty/Hair/Wave1/TAG_W1_Hair_processed.csv"
 pds_file <- "/Questionnaires/Wave1/PDS_Wave1.csv"
 pbip_file <- "/Questionnaires/Wave1/PBIP_Wave1.csv"
 ctq_file <- "/Questionnaires/Wave1/CTQ_Wave1.csv"
-pss_file <- "/Questionnaires/Wave1/PSS_Wave1.csv"
 free_lunch_file <- "/Demographics/ParentQ_SES/TAG_W1_SES_ParentQ.xlsx"
+
+#special
+pss_file <- "/Volumes/psych-cog/dsnlab/TAG/projects/W1_puberty_cca/PSS_Wave1.RDS"
 
 # load and clean saliva data
 saliva_df <- import(paste0(data_dir, saliva_file))
+saliva_df$SID <- str_pad(saliva_df$SID, 3, pad = "0")
+saliva_df$SID <- paste0("TAG", saliva_df$SID)
+
+# get age
+age_df <- saliva_df[, c("SID", "ageS2")]
+
+# ok continuing on with saliva now
 saliva_df_EST <- saliva_df[, c("SID", "sal_EST_conc_ln_w_1", "sal_EST_conc_ln_w_2", "sal_EST_conc_ln_w_3", "sal_EST_conc_ln_w_4")]
 saliva_df_TEST <- saliva_df[, c("SID", "sal_TEST_conc_ln_w_1", "sal_TEST_conc_ln_w_2", "sal_TEST_conc_ln_w_3", "sal_TEST_conc_ln_w_4")]
 saliva_df_DHEA <- saliva_df[, c("SID", "sal_DHEA_conc_ln_w_1", "sal_DHEA_conc_ln_w_2", "sal_DHEA_conc_ln_w_3", "sal_DHEA_conc_ln_w_4")]
@@ -52,8 +61,6 @@ mean_TEST <- find_saliva_mean(saliva_df_TEST, "TEST")
 mean_DHEA <- find_saliva_mean(saliva_df_DHEA, "DHEA")
 saliva_mean_df <- full_join(mean_EST, mean_TEST, by = "SID") %>%
   full_join(., mean_DHEA, by = "SID")
-saliva_mean_df$SID <- str_pad(saliva_mean_df$SID, 3, pad = "0")
-saliva_mean_df$SID <- paste0("TAG", saliva_mean_df$SID)
 
 # load hair data
 hair_df <- import(paste0(data_dir, hair_file))
@@ -63,7 +70,8 @@ hair_df$SID <- str_pad(hair_df$SID, 3, pad = "0")
 hair_df$SID <- paste0("TAG", hair_df$SID)
 
 # merge hair and saliva data
-hormone_df <- full_join(saliva_mean_df, hair_df, by = "SID")
+hormone_df <- full_join(saliva_mean_df, hair_df, by = "SID") %>% 
+  full_join(., age_df, by = "SID")
 
 # load physical maturation data
 pds_df <- import(paste0(data_dir, pds_file))
@@ -173,11 +181,22 @@ ctq_scores <- ctq_subscale_imputed_sums_df %>%
   summarise(ctq_total = round(sum(subscale_score), 0))
 
 # load and clean pss - NOTE: THIS SEEMS VERY WRONG
-pss_df <- import(paste0(data_dir, pss_file))
-pss_df <- pss_df[, c("tagid", "PSS_1", "PSS_2", "PSS_3", "PSS_4", "PSS_5", "PSS_6", "PSS_7", "PSS_8", "PSS_9", "PSS_10")]
+pss_raw <- import(pss_file) 
+pss_raw <- unique(pss_raw) # remove duplicated rows
+pss_raw <- pss_raw[order(pss_raw$tagid), ] # order by subject ID
+
+# based on the following output, it seems like row 42 is associated with Session 1 rather than session 2 and is less preferred
+#> filter(PSS, tagid == "TAG055")
+#   tagid       survey_name PSS_1 PSS_10 PSS_2 PSS_3 PSS_4 PSS_5 PSS_6 PSS_7 PSS_8 PSS_9
+#1 TAG055 TAG - Sess 1 - V3     2      0     2     1     3     4     0     3     4     1
+#2 TAG055 TAG - Sess 2 - V2     1      0     0     1     3     3     1     2     2     2
+pss_raw <- pss_raw[-42, ]
+
+survey_date <- pss_raw$survey_name
+pss_sess2 <- grepl("Sess 2", pss_raw$survey_name)
+
+pss_df <- pss_raw[, c("tagid", "PSS_1", "PSS_2", "PSS_3", "PSS_4", "PSS_5", "PSS_6", "PSS_7", "PSS_8", "PSS_9", "PSS_10")]
 colnames(pss_df)[1] = "SID"
-pss_df <- pss_df[order(pss_df$SID), ] # order by subject ID
-pss_df <- unique(pss_df)# remove duplicated rows
 
 # how many NAs
 num_pss_nas <- pss_df %>% 
@@ -187,7 +206,9 @@ num_pss_nas <- pss_df %>%
 
 # if the number of nas is 1, 2, or 3, mean imput values
 pss_na_vector <- which(num_pss_nas$total_pss_na > 0 & num_pss_nas$total_pss_na < 4)  #0 & num_pss_nas$total_pss_na < 4)
-  
+
+pss_df[pss_na_vector, ] # print rows with 1, 2, or 3 NAs
+
 # calculate mean imputed values
 mean_pss_subscale <- pss_df[pss_na_vector, ] %>% 
   gather(., key = item, value = response, -SID) %>% 
@@ -204,6 +225,8 @@ pss_scores <- pss_df %>%
   gather(., key = item, value = response, -SID) %>% 
   group_by(SID) %>% 
   summarise(pss_total = round(sum(response), 0))
+
+pss_scores$pss_sess2 <- sess2
 
 # load and clean free lunch data
 free_lunch_df <- import(paste0(data_dir, free_lunch_file))
