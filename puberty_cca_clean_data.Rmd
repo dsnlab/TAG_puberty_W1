@@ -19,7 +19,7 @@ package.check <- lapply(packages, FUN = function(x) {
 
 ```{r load data}
 
-save_clean_data = FALSE
+save_clean_data = TRUE
 
 # data files
 data_dir <- "/Volumes/psych-cog/dsnlab/TAG/behavior"
@@ -148,7 +148,8 @@ for (i in 1:length(subscale_info[[1]])){
     summarise(total_ctq_na = sum(is.na(value)))
 
   # if the number of nas is 1 or 2, mean imput values
-  ctq_na_vector <- which(num_ctq_nas$total_ctq_na == 1) #which(num_ctq_nas$total_ctq_na == 2))
+  ctq_na_vector <- c(which(num_ctq_nas$total_ctq_na == 1),
+                     which(num_ctq_nas$total_ctq_na == 2))
   ctq_na_vector <- ctq_na_vector[order(ctq_na_vector)]
   
   # calculate mean values
@@ -169,7 +170,7 @@ for (i in 1:length(subscale_info[[1]])){
     summarize(subscale_total = sum(response))
   
     # if the number of nas is 3 or more, save the SID number to be censored
-  ctq_missing_vector[[i]] <- which(num_ctq_nas$total_ctq_na > 1)
+  ctq_missing_vector[[i]] <- which(num_ctq_nas$total_ctq_na > 2)
 }
 
 ctq_subscale_imputed_sums_df <- purrr::reduce(ctq_subscale_imputed_sums, left_join, by = "ctq_SID")
@@ -226,7 +227,7 @@ pss_scores <- pss_df %>%
   group_by(SID) %>% 
   summarise(pss_total = round(sum(response), 0))
 
-pss_scores$pss_sess2 <- sess2
+pss_scores$pss_sess2 <- pss_sess2
 
 # load and clean free lunch data
 free_lunch_df <- import(paste0(data_dir, free_lunch_file))
@@ -240,7 +241,7 @@ stress_df <- full_join(ctq_scores, pss_scores, by = "SID") %>%
 
 ```{r save cleaned data}
 
-if (save_clean_data = TRUE) {
+if (save_clean_data == TRUE) {
   saveRDS(hormone_df, paste0(output_dir, "/hormone_df.RDS"))
   saveRDS(physical_mat_df, paste0(output_dir, "/physical_mat_df.RDS"))
   saveRDS(stress_df, paste0(output_dir, "/stress_df.RDS"))
