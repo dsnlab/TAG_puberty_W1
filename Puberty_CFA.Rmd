@@ -9,7 +9,7 @@ output: html_document
 ```{r Set Directory, message=FALSE, warning=FALSE, include=FALSE}
 getwd()
 #You should set this to the behavioral directory on the TAG file server 
-workdir='/Volumes/psych-cog/dsnlab/TAG/behavior/' 
+workdir='I:/dsnlab/TAG/behavior/' 
 ```
 
 ## Loading Libraries
@@ -23,6 +23,7 @@ library(dplyr)
 library(Hmisc)
 library(corrplot)
 library(lmtest)
+library(nlsem)
 ```
 
 ## Load and Clean Data
@@ -471,6 +472,11 @@ fitmeasures(fit_model6_AG_sal,
 fitmeasures(fit_model7_P_sal,
             fit.measures = c("cfi","ecvi","mfi"))
 #AG vs P are equivalent with saliva only
+fitmeasures(fit_model8_AG_bio,
+            fit.measures = c("cfi","ecvi","mfi"))
+fitmeasures(fit_model9_P_bio,
+            fit.measures = c("cfi","ecvi","mfi"))
+
 ```
 
 ```{r Biological Vars & Self-Report Quick Descriptives}
@@ -551,6 +557,12 @@ adrenal =~ PDS1 + PDS2 + PDS3 + PBIP2
 gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
 "
 
+model_sr1_nocov_noPBIP <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3
+gonadal =~ PDS1 + PDS4 + PDS6
+"
+
 #Model 2 - Self-Report Only with 1 Puberty Factors
 model_sr2 <- "
 #Latent Neuroendocrine Systems
@@ -583,6 +595,11 @@ model_sr2_noPDS1_nocov <- "
 puberty =~ PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 "
 
+model_sr2_nocov_noPBIP <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6
+"
+
 # Fit Self-Report CFAs (ordinal data)
 fit_model_sr1_ag_ord <- cfa(model_sr1, data = data_ord, estimator = "WLSMV", 
                        missing = "pairwise", verbose = T)
@@ -593,6 +610,9 @@ fit_model_sr1_ag_ord_noPDS1 <- cfa(model_sr1_noPDS1, data = data_ord,
                                    estimator = "WLSMV", 
                        missing = "pairwise", verbose = T)
 fit_model_sr1_ag_ord_noPDS1_nocov <- cfa(model_sr1_noPDS1_nocov, data = data_ord, 
+                                   estimator = "WLSMV", 
+                       missing = "pairwise", verbose = T)
+fit_model_sr1_ag_ord_nocov_noPBIP <- cfa(model_sr1_nocov_noPBIP, data = data_ord, 
                                    estimator = "WLSMV", 
                        missing = "pairwise", verbose = T)
 
@@ -616,6 +636,9 @@ fit_model_sr2_p_ord_noPDS1 <- cfa(model_sr2_noPDS1, data = data_ord,
                        missing = "pairwise", verbose = T)
 fit_model_sr2_p_ord_noPDS1_nocov <- cfa(model_sr2_noPDS1_nocov, data = data_ord, 
                                   estimator = "WLSMV", 
+                       missing = "pairwise", verbose = T)
+fit_model_sr2_p_ord_nocov_noPBIP <- cfa(model_sr2_nocov_noPBIP, data = data_ord, 
+                                   estimator = "WLSMV", 
                        missing = "pairwise", verbose = T)
 
 fit_model_sr1_pml <- cfa(model_sr1, data = data, estimator = "PML", 
@@ -643,6 +666,11 @@ fit_model_sr1_pml_noPDS1_nocov <- cfa(model_sr1_noPDS1_nocov, data = data,
 #                     ordered = c("PDS1","PDS2","PDS3","PDS4",
 #                                 "PDS6","PBIP1","PBIP2"))
 
+fit_model_sr1_pml_nocov_noPBIP <- cfa(model_sr1_nocov_noPBIP, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6"))
+
 fit_model_sr2_pml <- cfa(model_sr2, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS1","PDS2","PDS3","PDS4",
@@ -663,6 +691,10 @@ fit_model_sr2_pml_noPDS1_nocov <- cfa(model_sr2_noPDS1_nocov, data = data,
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS1","PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
+fit_model_sr2_pml_nocov_noPBIP <- cfa(model_sr2_nocov_noPBIP, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6"))
 
 # Fit Self-Report CFAs (continuous data)
 fit_model_sr1_ag_cont <- cfa(model_sr1, data = data, 
@@ -731,6 +763,17 @@ fitmeasures(fit_model_sr2_pml_noPDS1_nocov,
 #model with PDS1 is slightly better for most fit indices in P models
 #leaving PDS1 in the model from this point forward
 
+#What happens if we remove PBIP?
+fitmeasures(fit_model_sr1_ag_ord_nocov,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+fitmeasures(fit_model_sr1_ag_ord_nocov_noPBIP,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+fitmeasures(fit_model_sr2_p_ord_nocov,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+fitmeasures(fit_model_sr2_p_ord_nocov_noPBIP,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+#Nothing really... model already fits excellently (both of them...)
+
 #Is self-reported puberty better captured by A+G or P?
 #Model Stats, Fit Indices, and Comparisons
 summary(fit_model_sr1_ag_ord_nocov, fit.measures = T, standardized = T)
@@ -790,13 +833,6 @@ estr4 ~~ test4
 #Covariances for Hair 
 dhea_hair ~~ estr_hair + test_hair
 estr_hair ~~ test_hair
-
-#Covariances for Self-Report Questions
-PDS1 ~~ PDS2 + PDS3 + PDS4 + PDS6
-PDS2 ~~ PDS3 + PDS4 + PDS6
-PDS3 ~~ PDS4 + PDS6
-PDS4 ~~ PDS6
-PBIP1 ~~ PBIP2
 "
 
 # Fit Full Model 0
@@ -806,6 +842,7 @@ fit_fullmod_0_wlsmv <- cfa(fullmod_0, data = data_ord, estimator = "WLSMV",
 fit_fullmod_0a <- cfa(fullmod_0, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr")
 
 summary(fit_fullmod_0a, fit.measures=T, standardized=T)
+summary(fit_fullmod_0_wlsmv, fit.measures=T, standardized=T)
 # This line is more correct, but takes awhile to run...
 fit_fullmod_0_pml <- cfa(fullmod_0, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
@@ -917,10 +954,11 @@ sal_test =~ test1 + test2 + test3 + test4
 
 #Self-Report
 adrenal_sr =~ PDS2 + PDS3 + PBIP2
-gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+gonadal_sr =~ PDS4 + PDS6 + PBIP1
 
-#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
-adrenal =~ sal_dhea + sal_test + adrenal_sr
+#Neuroendocrine Systems
+a_bio =~ sal_dhea + sal_test
+adrenal =~ a_bio + adrenal_sr
 gonadal =~ sal_estr + gonadal_sr
 
 #Covariances for Saliva Sample Day
@@ -933,12 +971,8 @@ estr3 ~~ test3
 dhea4 ~~ estr4 + test4
 estr4 ~~ test4
 
-#Covariances for Self-Report Questions
-PDS1 ~~ PDS2 + PDS3 + PDS4 + PDS6
-PDS2 ~~ PDS3 + PDS4 + PDS6
-PDS3 ~~ PDS4 + PDS6
-PDS4 ~~ PDS6
-PBIP1 ~~ PBIP2
+#Set some latent var covars to zero
+a_bio ~~ 0*gonadal
 "
 
 # Fit Full Model 2
@@ -948,7 +982,7 @@ fit_fullmod_2_wlsmv <- cfa(fullmod_2, data = data_ord, estimator = "WLSMV",
 # This line is more correct, but takes awhile to run...
 fit_fullmod_2_pml <- cfa(fullmod_2, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
-                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                     ordered = c("PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for Full Model 2
@@ -982,7 +1016,7 @@ sal_estr =~ estr1 + estr2 + estr3 + estr4
 sal_test =~ test1 + test2 + test3 + test4
 
 #Self-Report
-pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+pub_sr =~ PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 
 #Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
 pub_bio =~ sal_dhea + sal_estr + sal_test
@@ -999,13 +1033,6 @@ dhea3 ~~ estr3 + test3
 estr3 ~~ test3
 dhea4 ~~ estr4 + test4
 estr4 ~~ test4
-
-#Covariances for Self-Report Questions
-PDS1 ~~ PDS2 + PDS3 + PDS4 + PDS6
-PDS2 ~~ PDS3 + PDS4 + PDS6
-PDS3 ~~ PDS4 + PDS6
-PDS4 ~~ PDS6
-PBIP1 ~~ PBIP2
 "
 
 # Fit Full Model 3
@@ -1024,6 +1051,7 @@ summary(fit_fullmod_3_pml, fit.measures = T, standardized = T)
 
 # Pictoral Representation of Full Model 3
 semPaths(fit_fullmod_3_wlsmv)
+semPaths(fit_fullmod_3_pml)
 
 fitmeasures(fit_fullmod_3_wlsmv,
             fit.measures = c("cfi","ecvi","mfi"))
@@ -1035,3 +1063,124 @@ anova(fit_fullmod_2_wlsmv, fit_fullmod_3_wlsmv)
 
 ```
 
+```{r Bio predicts Self-Report SEM}
+# Define SEM Model 1 - Does Salivary Puberty predict Self-Reported A + G?
+semmod_1 <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_gonadal =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Saliva Adrenal
+sal_adrenal =~ sal_dhea + sal_test
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS4 + PDS6 + PBIP1
+
+#Regressions
+adrenal_sr ~ sal_adrenal
+gonadal_sr ~ sal_gonadal
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+"
+
+# Define SEM Model 2 - Does Salivary Puberty predict Self-Reported Puberty?
+semmod_2 <- "
+#Latent Variables
+
+#Saliva
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Bio Puberty
+bio_puberty =~ sal_dhea + sal_estr + sal_test
+
+#Self-Report Puberty
+sr_puberty =~ PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#Regressions
+sr_puberty ~ bio_puberty
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+"
+
+# Fit SEM Model 1
+fit_semmod_1_wlsmv <- cfa(semmod_1, data = data_ord, estimator = "WLSMV", 
+                       missing = "pairwise", verbose = T)
+fit_semmod_1_pml <- cfa(semmod_1, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+# Pictoral Representation of SEM Model 1
+semPaths(fit_semmod_1_wlsmv)
+
+# Summary Stats for SEM Model 1
+summary(fit_semmod_1_wlsmv, fit.measures = T, standardized = T)
+summary(fit_semmod_1_pml, fit.measures = T, standardized = T)
+
+# Fit SEM Model 2
+fit_semmod_2_wlsmv <- cfa(semmod_2, data = data_ord, estimator = "WLSMV", 
+                       missing = "pairwise", verbose = T)
+fit_semmod_2_pml <- cfa(semmod_2, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+# Summary Stats for SEM Model 2
+summary(fit_semmod_2_wlsmv, fit.measures = T, standardized = T)
+summary(fit_semmod_2_pml, fit.measures = T, standardized = T)
+
+anova(fit_semmod_1_wlsmv, fit_semmod_2_wlsmv)
+semPaths(fit_semmod_2_wlsmv)
+
+#Comparing Model Fits
+fitmeasures(fit_semmod_1_wlsmv,
+            fit.measures = c("cfi","ecvi","mfi","pvalue"))
+fitmeasures(fit_semmod_2_wlsmv,
+            fit.measures = c("cfi","ecvi","mfi","pvalue"))
+```
+
+```{r}
+#Extracting Latent Variable Estimates per Subject
+semmod1_extract_vars <- lavPredict(fit_semmod_1_wlsmv)
+semmod2_extract_vars <- lavPredict(fit_semmod_2_wlsmv)
+
+#Correlation Matrices for Latent Var Estimates
+cor(semmod1_extract_vars)
+cor(semmod2_extract_vars)
+
+# "P" bio predict self-report
+plot(semmod2_extract_vars[,"sr_puberty"] ~ semmod2_extract_vars[,"bio_puberty"], ylab = "Extracted Latent Variable Estimate for Self-Reported Puberty", xlab = "Extracted Latent Variable Estimate for Salivary Puberty") + title(main = "Latent Biological Puberty (Salivary Hormones)\n predicts Latent Self-Reported Puberty") + abline(lm(semmod2_extract_vars[,"sr_puberty"] ~ semmod2_extract_vars[,"bio_puberty"])) + 
+  text(x=1.75, y=1.75, labels = bquote(italic(R)^2 == .(format(0.4034))))
+
+# "A" bio predict "A" self-report
+plot(semmod1_extract_vars[,"adrenal_sr"] ~ semmod1_extract_vars[,"sal_adrenal"], ylab = "Extracted Latent Variable Estimate\n for Self-Reported Adrenal Development", xlab = "Extracted Latent Variable Estimate\n for Salivary Adrenal Stage") + title(main = "Latent Biological Adrenal Development\n (Salivary DHEA & Testosterone)\n predicts Latent Self-Reported Adrenal Development") + abline(lm(semmod1_extract_vars[,"adrenal_sr"] ~ semmod1_extract_vars[,"sal_adrenal"])) + 
+  text(x=1.75, y=1.75, labels = bquote(italic(R)^2 == .(format(0.3697))))
+
+# "G" bio predict "G" self-report
+plot(semmod1_extract_vars[,"gonadal_sr"] ~ semmod1_extract_vars[,"sal_gonadal"], ylab = "Extracted Latent Variable Estimate\n for Self-Reported Gonadal Development", xlab = "Extracted Latent Variable Estimate\n for Salivary Gonadal Stage") + title(main = "Latent Biological Gonadal Development\n (Salivary Estradiol)\n predicts Latent Self-Reported Gonadal Development") + abline(lm(semmod1_extract_vars[,"gonadal_sr"] ~ semmod1_extract_vars[,"sal_gonadal"])) + 
+  text(x=0.2, y=1, labels = bquote(italic(R)^2 == .(format(0.3926))))
+
+
+```
