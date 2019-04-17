@@ -135,6 +135,7 @@ semPaths(fit_model2)
 
 # Comparing Model 1 vs. Model 2 Fit
 lrtest(fit_model2,fit_model1)
+lavTestLRT(fit_model2, fit_model1)
 
 # no equality constraints fits the data better... what does that mean?  Probably overfitting... thoughts?
 ```
@@ -179,6 +180,7 @@ semPaths(fit_model3)
 
 # Comparing Model 1 vs. Model 3 Fit
 anova(fit_model1,fit_model3)
+lavTestLRT(fit_model1, fit_model3)
 # overall model fit isn't significantly different, but hair loadings aren't good.  just saliva is better...
 ```
 
@@ -241,9 +243,9 @@ sal_estr =~ estr1 + estr2 + estr3 + estr4
 sal_test =~ test1 + test2 + test3 + test4
 
 #Regressions
-dhea_hair ~ sal_dhea
-estr_hair ~ sal_estr
-test_hair ~ sal_estr
+sal_dhea ~ dhea_hair
+sal_estr ~ estr_hair
+sal_test ~ test_hair
 
 #Covariances for Sample Day
 dhea1 ~~ estr1 + test1
@@ -262,6 +264,30 @@ saliva =~ sal_dhea + sal_estr + sal_test
 #Set Latent Var Covariances to Zero
 hair ~~ 0*saliva
 "
+
+# Define Model 5A - No methods factors
+model5A <- "
+#Latent Saliva Variables
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Regressions
+sal_dhea ~ dhea_hair
+sal_estr ~ estr_hair
+sal_test ~ test_hair
+
+#Covariances for Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+"
+
 # Fit Model 5 All Data
 fit_model5 <- cfa(model5, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
 
@@ -274,8 +300,21 @@ summary(fit_model5, fit.measures = T, standardized = T)
 summary(fit_model5_E2hair, fit.measures=T, standardized=T)
 #E2 hair complete data, E2hair predict E2sal p=0.004 (standardized estimate=0.351)
 
+# Fit Model 5A All Data
+fit_model5A <- cfa(model5A, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+
+# Fit Model 5A Data with Complete E2 Hair
+fit_model5A_E2hair <- cfa(model5A, data = hormones_complete_E2hair, missing = "ML", estimator = "MLR", se = "robust.mlr")
+
+# Summary Stats for Model 5A
+summary(fit_model5A, fit.measures = T, standardized = T) 
+#all, E2hair predict E2sal p=0.002 (standardized estimate=0.354)
+summary(fit_model5A_E2hair, fit.measures=T, standardized=T)
+#E2 hair complete data, E2hair predict E2sal p=0.004 (standardized estimate=0.351)
+
 # Pictoral Representation of Model 5
 semPaths(fit_model5)
+semPaths(fit_model5A)
 
 # Comparing Model Fits
 anova(fit_model3, fit_model5)
@@ -779,6 +818,7 @@ fitmeasures(fit_model_sr2_p_ord_nocov_noPBIP,
 summary(fit_model_sr1_ag_ord_nocov, fit.measures = T, standardized = T)
 summary(fit_model_sr2_p_ord_nocov, fit.measures = T, standardized = T)
 anova(fit_model_sr1_ag_ord_nocov, fit_model_sr2_p_ord_nocov)
+lavTestLRT(fit_model_sr1_ag_ord_nocov, fit_model_sr2_p_ord_nocov)
 fitmeasures(fit_model_sr1_ag_ord_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 fitmeasures(fit_model_sr2_p_ord_nocov,
@@ -788,7 +828,7 @@ fitmeasures(fit_model_sr2_p_ord_nocov,
 
 summary(fit_model_sr1_pml_nocov, fit.measures = T, standardized = T)
 summary(fit_model_sr2_pml_nocov, fit.measures = T, standardized = T)
-anova(fit_model_sr1_pml_nocov, fit_model_sr2_pml_nocov)
+lavTestLRT(fit_model_sr1_pml_nocov, fit_model_sr2_pml_nocov)
 fitmeasures(fit_model_sr1_pml_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 fitmeasures(fit_model_sr2_pml_nocov,
