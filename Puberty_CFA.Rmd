@@ -9,7 +9,7 @@ output: html_document
 ```{r Set Directory, message=FALSE, warning=FALSE, include=FALSE}
 getwd()
 #You should set this to the behavioral directory on the TAG file server 
-workdir='I:/dsnlab/TAG/behavior/' 
+workdir='Z:/dsnlab/TAG/behavior/' 
 ```
 
 ## Loading Libraries
@@ -100,6 +100,7 @@ fit_model1 <- cfa(model1, data = hormones, missing = "ML", estimator = "MLR", se
 
 # Summary Stats for Model 1
 summary(fit_model1, fit.measures = T, standardized = T)
+fitMeasures(fit_model1)
 
 # Pictoral Representation of Model 1
 semPaths(fit_model1)
@@ -129,6 +130,7 @@ fit_model2 <- cfa(model2, data = hormones, missing = "ML", estimator = "MLR", se
 
 # Summary Stats for Model 2
 summary(fit_model2, fit.measures = T, standardized = T)
+fitMeasures(fit_model2)
 
 # Pictoral Representation of Model 2
 semPaths(fit_model2)
@@ -174,6 +176,7 @@ fit_model3 <- cfa(model3, data = hormones, missing = "ML", estimator = "MLR", se
 
 # Summary Stats for Model 3
 summary(fit_model3, fit.measures = T, standardized = T)
+fitMeasures(fit_model3)
 
 # Pictoral Representation of Model 3
 semPaths(fit_model3)
@@ -296,9 +299,11 @@ fit_model5_E2hair <- cfa(model5, data = hormones_complete_E2hair, missing = "ML"
 
 # Summary Stats for Model 5
 summary(fit_model5, fit.measures = T, standardized = T) 
-#all, E2hair predict E2sal p=0.002 (standardized estimate=0.354)
+fitMeasures(fit_model5)
+#all, 
 summary(fit_model5_E2hair, fit.measures=T, standardized=T)
-#E2 hair complete data, E2hair predict E2sal p=0.004 (standardized estimate=0.351)
+fitMeasures(fit_model5_E2hair)
+#E2 hair complete data,
 
 # Fit Model 5A All Data
 fit_model5A <- cfa(model5A, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
@@ -363,6 +368,7 @@ fit_model6_AG_sal <- cfa(model6_AG_sal, data = hormones, missing = "ML", estimat
 
 # Summary Stats for Model 6
 summary(fit_model6_AG_sal, fit.measures = T, standardized = T)
+fitMeasures(fit_model6_AG_sal)
 
 # Pictoral Representation of Model 6
 semPaths(fit_model6_AG_sal)
@@ -782,6 +788,8 @@ anova(fit_model_sr2_pml_noPDS1, fit_model_sr2_pml_noPDS1_nocov)
 #Should we include PDS1?
 fitmeasures(fit_model_sr1_ag_ord_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_model_sr1_ag_ord_nocov, fit.measures = T, standardized = T)
+
 fitmeasures(fit_model_sr1_ag_ord_noPDS1_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 fitmeasures(fit_model_sr1_pml_nocov,
@@ -793,6 +801,8 @@ fitmeasures(fit_model_sr1_pml_noPDS1_nocov,
 
 fitmeasures(fit_model_sr2_p_ord_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_model_sr2_p_ord_nocov, fit.measures = T, standardized = T)
+
 fitmeasures(fit_model_sr2_p_ord_noPDS1_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 fitmeasures(fit_model_sr2_pml_nocov,
@@ -883,6 +893,7 @@ fit_fullmod_0a <- cfa(fullmod_0, data = data, missing = "ML", estimator = "MLR",
 
 summary(fit_fullmod_0a, fit.measures=T, standardized=T)
 summary(fit_fullmod_0_wlsmv, fit.measures=T, standardized=T)
+fitMeasures(fit_fullmod_0_wlsmv)
 # This line is more correct, but takes awhile to run...
 fit_fullmod_0_pml <- cfa(fullmod_0, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
@@ -946,12 +957,7 @@ estr4 ~~ test4
 dhea_hair ~~ estr_hair + test_hair
 estr_hair ~~ test_hair
 
-#Covariances for Self-Report Questions
-PDS1 ~~ PDS2 + PDS3 + PDS4 + PDS6
-PDS2 ~~ PDS3 + PDS4 + PDS6
-PDS3 ~~ PDS4 + PDS6
-PDS4 ~~ PDS6
-PBIP1 ~~ PBIP2
+
 "
 
 # Fit Full Model 1
@@ -966,15 +972,15 @@ fit_fullmod_1_pml <- cfa(fullmod_1, data = data, estimator = "PML",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for Full Model 1
-summary(fit_fullmod_1_wlsmv, fit.measures = T, standardized = T)
-summary(fit_fullmod_1_pml, fit.measures = T, standardized = T)
-summary(fit_fullmod_1_pml)
+summary(fit_fullmod_1_wlsmv, fit.measures = T, standardized = T) # this won't run for me - MLB
+summary(fit_fullmod_1_pml, fit.measures = T, standardized = T) # this either - MLB
+summary(fit_fullmod_1_pml) # hell yes this works - MLB
 
-# Pictoral Representation of Full Model 0
+# Pictoral Representation of Full Model 1
 semPaths(fit_fullmod_1_pml)
 
 fitmeasures(fit_fullmod_1_pml,
-            fit.measures = c("cfi","ecvi","mfi"))
+            fit.measures = c("cfi","ecvi","mfi")) # oh no - MLB
 fitmeasures(fit_fullmod_0_pml,
             fit.measures = c("cfi","ecvi","mfi"))
 anova(fit_fullmod_0_pml, fit_fullmod_1_pml)
@@ -994,7 +1000,7 @@ sal_test =~ test1 + test2 + test3 + test4
 
 #Self-Report
 adrenal_sr =~ PDS2 + PDS3 + PBIP2
-gonadal_sr =~ PDS4 + PDS6 + PBIP1
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
 
 #Neuroendocrine Systems
 a_bio =~ sal_dhea + sal_test
@@ -1022,7 +1028,7 @@ fit_fullmod_2_wlsmv <- cfa(fullmod_2, data = data_ord, estimator = "WLSMV",
 # This line is more correct, but takes awhile to run...
 fit_fullmod_2_pml <- cfa(fullmod_2, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
-                     ordered = c("PDS2","PDS3","PDS4",
+                     ordered = c("PDS2","PDS3","PDS1","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for Full Model 2
@@ -1056,7 +1062,7 @@ sal_estr =~ estr1 + estr2 + estr3 + estr4
 sal_test =~ test1 + test2 + test3 + test4
 
 #Self-Report
-pub_sr =~ PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+pub_sr =~ PDS2 + PDS3 + PDS1 + PDS4 + PDS6 + PBIP1 + PBIP2
 
 #Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
 pub_bio =~ sal_dhea + sal_estr + sal_test
@@ -1118,7 +1124,7 @@ sal_adrenal =~ sal_dhea + sal_test
 
 #Self-Report
 adrenal_sr =~ PDS2 + PDS3 + PBIP2
-gonadal_sr =~ PDS4 + PDS6 + PBIP1
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
 
 #Regressions
 adrenal_sr ~ sal_adrenal
@@ -1148,7 +1154,7 @@ sal_test =~ test1 + test2 + test3 + test4
 bio_puberty =~ sal_dhea + sal_estr + sal_test
 
 #Self-Report Puberty
-sr_puberty =~ PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+sr_puberty =~ PDS2 + PDS3 + PDS1 + PDS4 + PDS6 + PBIP1 + PBIP2
 
 #Regressions
 sr_puberty ~ bio_puberty
@@ -1169,7 +1175,7 @@ fit_semmod_1_wlsmv <- cfa(semmod_1, data = data_ord, estimator = "WLSMV",
                        missing = "pairwise", verbose = T)
 fit_semmod_1_pml <- cfa(semmod_1, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
-                     ordered = c("PDS2","PDS3","PDS4",
+                     ordered = c("PDS2","PDS3","PDS1","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Pictoral Representation of SEM Model 1
@@ -1184,7 +1190,7 @@ fit_semmod_2_wlsmv <- cfa(semmod_2, data = data_ord, estimator = "WLSMV",
                        missing = "pairwise", verbose = T)
 fit_semmod_2_pml <- cfa(semmod_2, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
-                     ordered = c("PDS2","PDS3","PDS4",
+                     ordered = c("PDS2","PDS3","PDS1","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for SEM Model 2
