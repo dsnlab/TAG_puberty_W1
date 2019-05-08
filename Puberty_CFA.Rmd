@@ -9,7 +9,7 @@ output: html_document
 ```{r Set Directory, message=FALSE, warning=FALSE, include=FALSE}
 getwd()
 #You should set this to the behavioral directory on the TAG file server 
-workdir='Z:/dsnlab/TAG/behavior/' 
+workdir='I:/dsnlab/TAG/behavior/' 
 ```
 
 ## Loading Libraries
@@ -100,7 +100,6 @@ fit_model1 <- cfa(model1, data = hormones, missing = "ML", estimator = "MLR", se
 
 # Summary Stats for Model 1
 summary(fit_model1, fit.measures = T, standardized = T)
-fitMeasures(fit_model1)
 
 # Pictoral Representation of Model 1
 semPaths(fit_model1)
@@ -130,7 +129,6 @@ fit_model2 <- cfa(model2, data = hormones, missing = "ML", estimator = "MLR", se
 
 # Summary Stats for Model 2
 summary(fit_model2, fit.measures = T, standardized = T)
-fitMeasures(fit_model2)
 
 # Pictoral Representation of Model 2
 semPaths(fit_model2)
@@ -176,7 +174,6 @@ fit_model3 <- cfa(model3, data = hormones, missing = "ML", estimator = "MLR", se
 
 # Summary Stats for Model 3
 summary(fit_model3, fit.measures = T, standardized = T)
-fitMeasures(fit_model3)
 
 # Pictoral Representation of Model 3
 semPaths(fit_model3)
@@ -299,11 +296,9 @@ fit_model5_E2hair <- cfa(model5, data = hormones_complete_E2hair, missing = "ML"
 
 # Summary Stats for Model 5
 summary(fit_model5, fit.measures = T, standardized = T) 
-fitMeasures(fit_model5)
-#all, 
+#all, E2hair predict E2sal p=0.002 (standardized estimate=0.354)
 summary(fit_model5_E2hair, fit.measures=T, standardized=T)
-fitMeasures(fit_model5_E2hair)
-#E2 hair complete data,
+#E2 hair complete data, E2hair predict E2sal p=0.004 (standardized estimate=0.351)
 
 # Fit Model 5A All Data
 fit_model5A <- cfa(model5A, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
@@ -368,7 +363,6 @@ fit_model6_AG_sal <- cfa(model6_AG_sal, data = hormones, missing = "ML", estimat
 
 # Summary Stats for Model 6
 summary(fit_model6_AG_sal, fit.measures = T, standardized = T)
-fitMeasures(fit_model6_AG_sal)
 
 # Pictoral Representation of Model 6
 semPaths(fit_model6_AG_sal)
@@ -565,6 +559,14 @@ model_sr1_nocov <- "
 #Latent Neuroendocrine Systems
 adrenal =~ PDS2 + PDS3 + PBIP2
 gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#To test thresholds later to see whether modelling the data as ordinal made a difference or not...
+PDS1 | a1*t1 + a2*t2 + a3*t3
+PDS2 | b1*t1 + b2*t2 + b3*t3
+PDS3 | c1*t1 + c2*t2 + c3*t3
+PDS4 | d1*t1 + d2*t2 + d3*t3
+PBIP1 | e1*t1 + e2*t2 + e3*t3 + e4*t4
+PBIP2 | f1*t1 + f2*t2 + f3*t3 + f4*t4
 "
 
 model_sr1_noPDS1 <- "
@@ -623,6 +625,14 @@ PBIP1 ~~ PBIP2
 model_sr2_nocov <- "
 #Latent Neuroendocrine Systems
 puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#To test thresholds later to see whether modelling the data as ordinal made a difference or not...
+PDS1 | a1*t1 + a2*t2 + a3*t3
+PDS2 | b1*t1 + b2*t2 + b3*t3
+PDS3 | c1*t1 + c2*t2 + c3*t3
+PDS4 | d1*t1 + d2*t2 + d3*t3
+PBIP1 | e1*t1 + e2*t2 + e3*t3 + e4*t4
+PBIP2 | f1*t1 + f2*t2 + f3*t3 + f4*t4
 "
 
 model_sr2_noPDS1 <- "
@@ -788,8 +798,6 @@ anova(fit_model_sr2_pml_noPDS1, fit_model_sr2_pml_noPDS1_nocov)
 #Should we include PDS1?
 fitmeasures(fit_model_sr1_ag_ord_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_model_sr1_ag_ord_nocov, fit.measures = T, standardized = T)
-
 fitmeasures(fit_model_sr1_ag_ord_noPDS1_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 fitmeasures(fit_model_sr1_pml_nocov,
@@ -801,8 +809,6 @@ fitmeasures(fit_model_sr1_pml_noPDS1_nocov,
 
 fitmeasures(fit_model_sr2_p_ord_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_model_sr2_p_ord_nocov, fit.measures = T, standardized = T)
-
 fitmeasures(fit_model_sr2_p_ord_noPDS1_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 fitmeasures(fit_model_sr2_pml_nocov,
@@ -846,6 +852,22 @@ fitmeasures(fit_model_sr2_pml_nocov,
 #AG fits better than P for model with NO covariances between items of the same questionnaire,
 #data treated as ordinal, and pml estimator (p=0.09)
 
+#Does modelling the data as ordinal really matter?
+lavTestWald(fit_model_sr1_pml_nocov, constraints = "a1 - a2 == a2 - a3") # PDS1=Yes
+lavTestWald(fit_model_sr1_pml_nocov, constraints = "b1 - b2 == b2 - b3") # PDS2=No
+lavTestWald(fit_model_sr1_pml_nocov, constraints = "c1 - c2 == c2 - c3") # PDS3=Yes
+lavTestWald(fit_model_sr1_pml_nocov, constraints = "d1 - d2 == d2 - d3") # PDS4=No
+lavTestWald(fit_model_sr1_pml_nocov, constraints = "e1 - e2 == e2 - e3 == e3 - e4") # PBIP1=Yes
+lavTestWald(fit_model_sr1_pml_nocov, constraints = "f1 - f2 == f2 - f3 == f3 - f4") # PBIP2=Yes
+
+#Does modelling the data as ordinal really matter?
+lavTestWald(fit_model_sr2_pml_nocov, constraints = "a1 - a2 == a2 - a3") # PDS1=Yes
+lavTestWald(fit_model_sr2_pml_nocov, constraints = "b1 - b2 == b2 - b3") # PDS2=No
+lavTestWald(fit_model_sr2_pml_nocov, constraints = "c1 - c2 == c2 - c3") # PDS3=Yes
+lavTestWald(fit_model_sr2_pml_nocov, constraints = "d1 - d2 == d2 - d3") # PDS4=No
+lavTestWald(fit_model_sr2_pml_nocov, constraints = "e1 - e2 == e2 - e3 == e3 - e4") # PBIP1=Yes
+lavTestWald(fit_model_sr2_pml_nocov, constraints = "f1 - f2 == f2 - f3 == f3 - f4") # PBIP2=Yes
+
 ```
 ```{r}
 # Define Full Model 0
@@ -885,37 +907,107 @@ dhea_hair ~~ estr_hair + test_hair
 estr_hair ~~ test_hair
 "
 
+# Define Full Model 0 (self-report weighted as half of latent A & half of latent G)
+fullmod_0reweight <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Hormones (Saliva + Hair) - Level 2
+dhea =~ sal_dhea + dhea_hair
+estr =~ sal_estr + estr_hair
+test =~ sal_test + test_hair
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Reweight
+a_bio =~ dhea + test
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ a_bio + adrenal_sr
+gonadal =~ estr + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#Covariances for Hair 
+dhea_hair ~~ estr_hair + test_hair
+estr_hair ~~ test_hair
+"
+
 # Fit Full Model 0
 fit_fullmod_0_wlsmv <- cfa(fullmod_0, data = data_ord, estimator = "WLSMV", 
                        missing = "pairwise", verbose = T)
 
 fit_fullmod_0a <- cfa(fullmod_0, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr")
 
+# Fit Full Model 0 reweighted
+fit_fullmod_0reweight_wlsmv <- cfa(fullmod_0reweight, data = data_ord, 
+                                   estimator = "WLSMV", 
+                       missing = "pairwise", verbose = T)
+
+fit_fullmod_0reweighta <- cfa(fullmod_0reweight, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr")
+
+# Summary Stats for Full Model 0
 summary(fit_fullmod_0a, fit.measures=T, standardized=T)
 summary(fit_fullmod_0_wlsmv, fit.measures=T, standardized=T)
-fitMeasures(fit_fullmod_0_wlsmv)
-# This line is more correct, but takes awhile to run...
+
+# Summary Stats for Full Model 0 Reweighted
+summary(fit_fullmod_0reweighta, fit.measures=T, standardized=T)
+summary(fit_fullmod_0reweight_wlsmv, fit.measures=T, standardized=T)
+
+anova(fit_fullmod_0_wlsmv, fit_fullmod_0reweight_wlsmv)
+anova(fit_fullmod_0a, fit_fullmod_0reweighta)
+#Using either WLSMV or MLR, reweighting fits the data better
+
+# Next two lines are more correct, but they take awhile to run...
 fit_fullmod_0_pml <- cfa(fullmod_0, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+fit_fullmod_0reweight_pml <- cfa(fullmod_0reweight, data = data, 
+                                 estimator = "PML", 
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS1","PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for Full Model 0
 summary(fit_fullmod_0_wlsmv, fit.measures = T, standardized = T)
+summary(fit_fullmod_0reweight_wlsmv, fit.measures = T, standardized = T)
+
 summary(fit_fullmod_0_pml, fit.measures = T, standardized = T)
+summary(fit_fullmod_0reweight_pml, fit.measures = T, standardized = T)
 
-fit_fullmod_0_wlsmv_parest <- parameterEstimates(fit_fullmod_0_wlsmv)
+#fit_fullmod_0_wlsmv_parest <- parameterEstimates(fit_fullmod_0_wlsmv)
 
-fit_fullmod_0_pml_parest <- parameterEstimates(fit_fullmod_0_pml)
-lavaan:::ctr_pml_plrt(fit_fullmod_0_pml)
+#fit_fullmod_0_pml_parest <- parameterEstimates(fit_fullmod_0_pml)
+#lavaan:::ctr_pml_plrt(fit_fullmod_0_pml)
 
 # Pictoral Representation of Full Model 0
 semPaths(fit_fullmod_0_wlsmv)
+semPaths(fit_fullmod_0reweight_wlsmv)
 semPaths(fit_fullmod_0_pml)
+semPaths(fit_fullmod_0reweight_pml)
 
 fitmeasures(fit_fullmod_0_wlsmv,
             fit.measures = c("cfi","ecvi","mfi"))
+fitmeasures(fit_fullmod_0reweight_wlsmv,
+            fit.measures = c("cfi","ecvi","mfi"))
 fitmeasures(fit_fullmod_0_pml,
+            fit.measures = c("cfi","ecvi","mfi"))
+fitmeasures(fit_fullmod_0reweight_pml,
             fit.measures = c("cfi","ecvi","mfi"))
 
 ```
@@ -956,8 +1048,6 @@ estr4 ~~ test4
 #Covariances for Hair 
 dhea_hair ~~ estr_hair + test_hair
 estr_hair ~~ test_hair
-
-
 "
 
 # Fit Full Model 1
@@ -972,20 +1062,24 @@ fit_fullmod_1_pml <- cfa(fullmod_1, data = data, estimator = "PML",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for Full Model 1
-summary(fit_fullmod_1_wlsmv, fit.measures = T, standardized = T) # this won't run for me - MLB
-summary(fit_fullmod_1_pml, fit.measures = T, standardized = T) # this either - MLB
-summary(fit_fullmod_1_pml) # hell yes this works - MLB
+summary(fit_fullmod_1_wlsmv, fit.measures = T, standardized = T) #model didn't run, so no summary stats are available
+summary(fit_fullmod_1_pml, fit.measures = T, standardized = T)
+#summary(fit_fullmod_1_pml)
 
-# Pictoral Representation of Full Model 1
+# Pictoral Representation of Full Model 0
 semPaths(fit_fullmod_1_pml)
 
 fitmeasures(fit_fullmod_1_pml,
-            fit.measures = c("cfi","ecvi","mfi")) # oh no - MLB
+            fit.measures = c("cfi","ecvi","mfi"))
 fitmeasures(fit_fullmod_0_pml,
             fit.measures = c("cfi","ecvi","mfi"))
-anova(fit_fullmod_0_pml, fit_fullmod_1_pml)
-lrtest(fit_fullmod_0_pml, fit_fullmod_1_pml)
 
+#Model Comparisons
+anova(fit_fullmod_0_pml, fit_fullmod_1_pml)
+lavTestLRT(fit_fullmod_0_pml, fit_fullmod_1_pml)
+
+anova(fit_fullmod_0reweight_pml, fit_fullmod_1_pml)
+lavTestLRT(fit_fullmod_0reweight_pml, fit_fullmod_1_pml)
 ```
 
 ```{r}
@@ -1002,9 +1096,11 @@ sal_test =~ test1 + test2 + test3 + test4
 adrenal_sr =~ PDS2 + PDS3 + PBIP2
 gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
 
-#Neuroendocrine Systems
-a_bio =~ sal_dhea + sal_test
-adrenal =~ a_bio + adrenal_sr
+#Reweight
+sal_a =~ sal_dhea + sal_test
+
+#Neuroendocrine Systems (Saliva + Qs) - Level 3
+adrenal =~ sal_a + adrenal_sr
 gonadal =~ sal_estr + gonadal_sr
 
 #Covariances for Saliva Sample Day
@@ -1016,9 +1112,6 @@ dhea3 ~~ estr3 + test3
 estr3 ~~ test3
 dhea4 ~~ estr4 + test4
 estr4 ~~ test4
-
-#Set some latent var covars to zero
-a_bio ~~ 0*gonadal
 "
 
 # Fit Full Model 2
@@ -1028,7 +1121,7 @@ fit_fullmod_2_wlsmv <- cfa(fullmod_2, data = data_ord, estimator = "WLSMV",
 # This line is more correct, but takes awhile to run...
 fit_fullmod_2_pml <- cfa(fullmod_2, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
-                     ordered = c("PDS2","PDS3","PDS1","PDS4",
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for Full Model 2
@@ -1037,17 +1130,22 @@ summary(fit_fullmod_2_pml, fit.measures = T, standardized = T)
 
 # Pictoral Representation of Full Model 2
 semPaths(fit_fullmod_2_wlsmv)
+semPaths(fit_fullmod_2_pml)
 
 fitmeasures(fit_fullmod_2_wlsmv,
             fit.measures = c("cfi","ecvi","mfi"))
-fitmeasures(fit_fullmod_0_wlsmv,
+fitmeasures(fit_fullmod_0reweight_wlsmv,
             fit.measures = c("cfi","ecvi","mfi"))
 fitmeasures(fit_fullmod_2_pml,
+            fit.measures = c("cfi","ecvi","mfi"))
+fitmeasures(fit_fullmod_0reweight_pml,
             fit.measures = c("cfi","ecvi","mfi"))
 
 anova(fit_fullmod_0_wlsmv, fit_fullmod_2_wlsmv)
 # model with hair seems to fit better (see mfi for example)
 
+lavTestLRT(fit_fullmod_0reweight_pml, fit_fullmod_2_pml)
+anova(fit_fullmod_0reweight_pml, fit_fullmod_2_pml)
 
 ```
 
@@ -1062,7 +1160,7 @@ sal_estr =~ estr1 + estr2 + estr3 + estr4
 sal_test =~ test1 + test2 + test3 + test4
 
 #Self-Report
-pub_sr =~ PDS2 + PDS3 + PDS1 + PDS4 + PDS6 + PBIP1 + PBIP2
+pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 
 #Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
 pub_bio =~ sal_dhea + sal_estr + sal_test
@@ -1104,10 +1202,15 @@ fitmeasures(fit_fullmod_3_wlsmv,
 fitmeasures(fit_fullmod_3_pml,
             fit.measures = c("cfi","ecvi","mfi"))
 
+#Model comparisons - WLSMV
 anova(fit_fullmod_1_wlsmv, fit_fullmod_3_wlsmv)
 anova(fit_fullmod_2_wlsmv, fit_fullmod_3_wlsmv)
 
+#Model comparisons - PML
+anova(fit_fullmod_1_pml, fit_fullmod_3_pml)
+anova(fit_fullmod_2_pml, fit_fullmod_3_pml)
 ```
+
 
 ```{r Bio predicts Self-Report SEM}
 # Define SEM Model 1 - Does Salivary Puberty predict Self-Reported A + G?
@@ -1116,19 +1219,16 @@ semmod_1 <- "
 
 #Saliva - Level 1
 sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_gonadal =~ estr1 + estr2 + estr3 + estr4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
 sal_test =~ test1 + test2 + test3 + test4
-
-#Saliva Adrenal
-sal_adrenal =~ sal_dhea + sal_test
 
 #Self-Report
 adrenal_sr =~ PDS2 + PDS3 + PBIP2
 gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
 
 #Regressions
-adrenal_sr ~ sal_adrenal
-gonadal_sr ~ sal_gonadal
+gonadal_sr ~ b1*sal_estr
+adrenal_sr ~ b2*sal_dhea + b3*sal_test
 
 #Covariances for Saliva Sample Day
 dhea1 ~~ estr1 + test1
@@ -1154,10 +1254,10 @@ sal_test =~ test1 + test2 + test3 + test4
 bio_puberty =~ sal_dhea + sal_estr + sal_test
 
 #Self-Report Puberty
-sr_puberty =~ PDS2 + PDS3 + PDS1 + PDS4 + PDS6 + PBIP1 + PBIP2
+sr_puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 
 #Regressions
-sr_puberty ~ bio_puberty
+sr_puberty ~ b4*bio_puberty
 
 #Covariances for Saliva Sample Day
 dhea1 ~~ estr1 + test1
@@ -1171,15 +1271,40 @@ estr4 ~~ test4
 "
 
 # Fit SEM Model 1
-fit_semmod_1_wlsmv <- cfa(semmod_1, data = data_ord, estimator = "WLSMV", 
+fit_semmod_1_wlsmv <- sem(semmod_1, data = data_ord, estimator = "WLSMV", 
                        missing = "pairwise", verbose = T)
 fit_semmod_1_pml <- cfa(semmod_1, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
-                     ordered = c("PDS2","PDS3","PDS1","PDS4",
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
+
+# Test the regression parameters (i.e., the chi-square version of the z-test in the summary stats)
+lavTestWald(fit_semmod_1_pml, constraints = "b1 == 0")# does adrenal bio predict adrenal self-report? Yes
+
+con1 = '
+  b2 == 0
+  b3 == 0
+'
+lavTestWald(fit_semmod_1_pml, constraints = con1) # does gonadal bio predict gonadal self-report? Yes
+lavTestWald(fit_semmod_1_pml, constraints = "b2 == b3")# do dhea & testosterone contribute equal predictive utility for gonadal self-report? Yes
+lavTestWald(fit_semmod_1_pml, constraints = "b2 == 0")
+lavTestWald(fit_semmod_1_pml, constraints = "b3 == 0")
+#however, only testosterone is significant on its own
+
+#test both a+g regressions together (i.e., multivariate wald-test...)
+con2 = '
+  b1 == 0
+  b2 == 0
+  b3 == 0
+'
+lavTestWald(fit_semmod_1_pml, constraints = con2) # do adrenal & gonadal bio jointly predict self-reported adrenal & gonadal? Yes
+
+lavTestWald(fit_semmod_1_pml, constraints = "b1 == (b2 + b3)") # do adrenal & gonadal predict equally? No
+
 
 # Pictoral Representation of SEM Model 1
 semPaths(fit_semmod_1_wlsmv)
+semPaths(fit_semmod_1_pml)
 
 # Summary Stats for SEM Model 1
 summary(fit_semmod_1_wlsmv, fit.measures = T, standardized = T)
@@ -1190,31 +1315,175 @@ fit_semmod_2_wlsmv <- cfa(semmod_2, data = data_ord, estimator = "WLSMV",
                        missing = "pairwise", verbose = T)
 fit_semmod_2_pml <- cfa(semmod_2, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
-                     ordered = c("PDS2","PDS3","PDS1","PDS4",
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for SEM Model 2
 summary(fit_semmod_2_wlsmv, fit.measures = T, standardized = T)
 summary(fit_semmod_2_pml, fit.measures = T, standardized = T)
 
-anova(fit_semmod_1_wlsmv, fit_semmod_2_wlsmv)
-semPaths(fit_semmod_2_wlsmv)
+lavTestWald(fit_semmod_2_pml, constraints = "b4 == 0") # does pubertal bio predict pubertal self-report? Yes
 
-#Comparing Model Fits
-fitmeasures(fit_semmod_1_wlsmv,
-            fit.measures = c("cfi","ecvi","mfi","pvalue"))
-fitmeasures(fit_semmod_2_wlsmv,
-            fit.measures = c("cfi","ecvi","mfi","pvalue"))
+anova(fit_semmod_1_wlsmv, fit_semmod_2_wlsmv)
+anova(fit_semmod_1_pml, fit_semmod_2_pml)
+
+semPaths(fit_semmod_2_pml)
+
+semmod1_ParEst <- parameterEstimates(fit_semmod_1_pml)
+semmod2_ParEst <- parameterEstimates(fit_semmod_2_pml)
+
+```
+
+```{r Bio predicts Self-Report SEM (includes hair)}
+# Define SEM Model 3 - Does Salivary + Hair Puberty predict Self-Reported A + G?
+semmod_3 <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Bio - Level 2
+dhea =~ sal_dhea + dhea_hair
+estr =~ sal_estr + estr_hair
+test =~ sal_test + test_hair
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Regressions
+gonadal_sr ~ b1*estr
+adrenal_sr ~ b2*dhea + b3*test
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#Covariances for Hair
+dhea_hair ~~ estr_hair + test_hair
+estr_hair ~~ test_hair
+"
+
+# Define SEM Model 4 - Does Salivary + Hair Puberty predict Self-Reported Puberty?
+semmod_4 <- "
+#Latent Variables
+
+#Saliva
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Bio - Level 2
+dhea =~ sal_dhea + dhea_hair
+estr =~ sal_estr + estr_hair
+test =~ sal_test + test_hair
+
+#Bio Puberty
+bio_puberty =~ dhea + estr + test
+
+#Self-Report Puberty
+sr_puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#Regressions
+sr_puberty ~ b4*bio_puberty
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#Covariances for Hair
+dhea_hair ~~ estr_hair + test_hair
+estr_hair ~~ test_hair
+"
+
+# Fit SEM Model 3
+fit_semmod_3_wlsmv <- sem(semmod_3, data = data_ord, estimator = "WLSMV", 
+                       missing = "pairwise", verbose = T)
+fit_semmod_3_pml <- cfa(semmod_3, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+# Test the regression parameters (i.e., the chi-square version of the z-test in the summary stats)
+lavTestWald(fit_semmod_3_pml, constraints = "b1 == 0")# does adrenal bio predict adrenal self-report? Yes
+
+con1 = '
+  b2 == 0
+  b3 == 0
+'
+lavTestWald(fit_semmod_3_pml, constraints = con1) # does gonadal bio predict gonadal self-report? Yes
+lavTestWald(fit_semmod_3_pml, constraints = "b2 == b3")# do dhea & testosterone contribute equal predictive utility for gonadal self-report? No
+lavTestWald(fit_semmod_3_pml, constraints = "b2 == 0")
+lavTestWald(fit_semmod_3_pml, constraints = "b3 == 0") #only testosterone is predictive of adrenal development
+
+#test both a+g regressions together (i.e., multivariate wald-test...)
+con2 = '
+  b1 == 0
+  b2 == 0
+  b3 == 0
+'
+lavTestWald(fit_semmod_3_pml, constraints = con2) # do adrenal & gonadal bio jointly predict self-reported adrenal & gonadal? Yes
+
+lavTestWald(fit_semmod_3_pml, constraints = "b1 == (b2 + b3)") # do adrenal & gonadal predict equally? No
+
+
+# Pictoral Representation of SEM Model 1
+semPaths(fit_semmod_3_wlsmv)
+semPaths(fit_semmod_3_pml)
+
+# Summary Stats for SEM Model 1
+summary(fit_semmod_3_wlsmv, fit.measures = T, standardized = T)
+summary(fit_semmod_3_pml, fit.measures = T, standardized = T)
+
+# Fit SEM Model 4
+fit_semmod_4_wlsmv <- cfa(semmod_4, data = data_ord, estimator = "WLSMV", 
+                       missing = "pairwise", verbose = T)
+fit_semmod_4_pml <- cfa(semmod_4, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+# Summary Stats for SEM Model 4
+summary(fit_semmod_4_wlsmv, fit.measures = T, standardized = T)
+summary(fit_semmod_4_pml, fit.measures = T, standardized = T)
+
+lavTestWald(fit_semmod_4_pml, constraints = "b4 == 0") # does pubertal bio predict pubertal self-report? Yes
+
+anova(fit_semmod_3_wlsmv, fit_semmod_4_wlsmv)
+anova(fit_semmod_3_pml, fit_semmod_4_pml)
+
+semPaths(fit_semmod_4_pml)
+
+semmod3_ParEst <- parameterEstimates(fit_semmod_3_pml)
+semmod4_ParEst <- parameterEstimates(fit_semmod_4_pml)
 ```
 
 ```{r}
 #Extracting Latent Variable Estimates per Subject
-semmod1_extract_vars <- lavPredict(fit_semmod_1_wlsmv)
-semmod2_extract_vars <- lavPredict(fit_semmod_2_wlsmv)
+semmod1_extract_vars <- lavPredict(fit_semmod_1_pml, method="ML")
+semmod2_extract_vars <- lavPredict(fit_semmod_2_pml, method="ML")
+semmod3_extract_vars <- lavPredict(fit_semmod_3_pml, method="ML")
+semmod4_extract_vars <- lavPredict(fit_semmod_4_pml, method="ML")
 
 #Correlation Matrices for Latent Var Estimates
 cor(semmod1_extract_vars)
 cor(semmod2_extract_vars)
+cor(semmod3_extract_vars)
+cor(semmod4_extract_vars)
 
 # "P" bio predict self-report
 plot(semmod2_extract_vars[,"sr_puberty"] ~ semmod2_extract_vars[,"bio_puberty"], ylab = "Extracted Latent Variable Estimate for Self-Reported Puberty", xlab = "Extracted Latent Variable Estimate for Salivary Puberty") + title(main = "Latent Biological Puberty (Salivary Hormones)\n predicts Latent Self-Reported Puberty") + abline(lm(semmod2_extract_vars[,"sr_puberty"] ~ semmod2_extract_vars[,"bio_puberty"])) + 
