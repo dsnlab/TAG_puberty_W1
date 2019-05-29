@@ -496,74 +496,59 @@ semPaths(fit_hm4)
 
 ## Step 3: Hormone Models - Saliva ONLY. All have no equality Constraints
 ```{r SalMs}
-# Define SalM1 - one factor, no covariances, saliva
+# Define SLM1 - one factor, no covariances, saliva
 # NEED TO UPDATE FROM HERE ONWARD
-salm1 <- "
+slm1 <- "
 #Latent Saliva Variables
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Latent Hormone Variables
-dhea =~ sal_dhea + dhea_hair
-estr =~ sal_estr + estr_hair
-test =~ sal_test + test_hair
+dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+estr =~ estr1 + estr2 + estr3 + estr4
+test =~ test1 + test2 + test3 + test4
 
 #Latent Neuroendocrine Systems
 puberty =~ dhea + estr + test
 
 "
 
-# Fit HM1
-fit_hm1 <- cfa(hm1, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+# Fit SLM1
+fit_slm1 <- cfa(slm1, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
 
-# Summary Stats for HM1
-summary(fit_hm1, fit.measures = T, standardized = T)
-fitMeasures(fit_hm1,
+# Summary Stats for SLM1
+summary(fit_slm1, fit.measures = T, standardized = T)
+fitMeasures(fit_slm1,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of HM1
 semPaths(fit_hm1)
 
 
-# Define HM2 - two factors, no covariances, hair + saliva
-hm2 <- "
+# Define SLM2 - two factors, no covariances, saliva only
+slm2 <- "
 #Latent Saliva Variables
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Latent Hormone Variables
-dhea =~ sal_dhea + dhea_hair
-estr =~ sal_estr + estr_hair
-test =~ sal_test + test_hair
+dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+estr =~ estr1 + estr2 + estr3 + estr4
+test =~ test1 + test2 + test3 + test4
 
 #Latent Neuroendocrine Systems
 adrenal =~ dhea + test
 
 "
 
-# Fit HM2
-fit_hm2 <- cfa(hm2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") #the optimizer warns that a solution has NOT been found!
+# Fit SLM2
+fit_slm2 <- cfa(slm2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
 
-# Summary Stats for HM2
-summary(fit_hm2, fit.measures = T, standardized = T)
-fitMeasures(fit_hm2)
+# Summary Stats for SLM2
+summary(fit_slm2, fit.measures = T, standardized = T)
+fitMeasures(fit_slm2)
 
-# Pictoral Representation of HM2
-semPaths(fit_hm2)
+# Pictoral Representation of SLM2
+semPaths(fit_slm2)
 
-# Define HM3 - one factor, WITH covariances, hair + saliva
-hm3 <- "
+# Define SLM3 - one factor, WITH covariances, saliva only
+slm3 <- "
 #Latent Saliva Variables
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Latent Hormone Variables
-dhea =~ sal_dhea + dhea_hair
-estr =~ sal_estr + estr_hair
-test =~ sal_test + test_hair
+dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+estr =~ estr1 + estr2 + estr3 + estr4
+test =~ test1 + test2 + test3 + test4
 
 #Latent Neuroendocrine Systems
 puberty =~ dhea + estr + test
@@ -577,22 +562,18 @@ dhea3 ~~ estr3 + test3
 estr3 ~~ test3
 dhea4 ~~ estr4 + test4
 estr4 ~~ test4
-
-#Covariances for Hair Sample 
-dhea_hair ~~ estr_hair + test_hair
-estr_hair ~~ test_hair
 "
 
-# Fit HM3
-fit_hm3 <- cfa(hm3, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+# Fit SLM3
+fit_slm3 <- cfa(slm3, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
 
-# Summary Stats for HM3
-summary(fit_hm3, fit.measures = T, standardized = T)
-fitMeasures(fit_hm3,
+# Summary Stats for SLM3
+summary(fit_slm3, fit.measures = T, standardized = T)
+fitMeasures(fit_slm3,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
-# Pictoral Representation of HM3
-semPaths(fit_hm3)
+# Pictoral Representation of SLM3
+semPaths(fit_slm3)
 
 
 # Define HM4 - two factors, WITH covariances, hair + saliva
