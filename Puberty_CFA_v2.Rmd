@@ -64,6 +64,65 @@ hormones <- saliva %>% full_join(hair, by = "SID")
 hormones_complete_E2hair <- filter(hormones, !is.na(estr_hair))
 data <- hormones %>% full_join(sr_qs, by = "SID")
 
+# Count missing data by variable
+missing <- data.frame(matrix(ncol = 44, nrow = 1))
+colnames(missing) <- c("na_dhea1","percna_dhea1","na_dhea2","percna_dhea2","na_dhea3",
+                       "percna_dhea3","na_dhea4","percna_dhea4","na_estr1","percna_estr1",
+                       "na_estr2","percna_estr2","na_estr3","percna_estr3","na_estr4",
+                       "percna_estr4","na_test1","percna_test1","na_test2","percna_test2",
+                       "na_test3","percna_test3","na_test4","percna_test4","na_dhea_hair",
+                       "percna_dhea_hair","na_estr_hair","percna_estr_hair",
+                       "na_test_hair","percna_test_hair","na_PDS1","percna_PDS1",
+                       "na_PDS2","percna_PDS2","na_PDS3","percna_PDS3","na_PDS4",
+                       "percna_PDS4","na_PDS6","percna_PDS6","na_PBIP1","percna_PBIP1",
+                       "na_PBIP2","percna_PBIP2")
+missing$na_dhea1 <- length(data$dhea1)-length(na.omit(data$dhea1))
+missing$percna_dhea1 <- (missing$na_dhea1/length(data$dhea1))*100
+missing$na_dhea2 <- length(data$dhea2)-length(na.omit(data$dhea2))
+missing$percna_dhea2 <- (missing$na_dhea2/length(data$dhea2))*100
+missing$na_dhea3 <- length(data$dhea3)-length(na.omit(data$dhea3))
+missing$percna_dhea3 <- (missing$na_dhea3/length(data$dhea3))*100
+missing$na_dhea4 <- length(data$dhea4)-length(na.omit(data$dhea4))
+missing$percna_dhea4 <- (missing$na_dhea4/length(data$dhea4))*100
+missing$na_estr1 <- length(data$estr1)-length(na.omit(data$estr1))
+missing$percna_estr1 <- (missing$na_estr1/length(data$estr1))*100
+missing$na_estr2 <- length(data$estr2)-length(na.omit(data$estr2))
+missing$percna_estr2 <- (missing$na_estr2/length(data$estr2))*100
+missing$na_estr3 <- length(data$estr3)-length(na.omit(data$estr3))
+missing$percna_estr3 <- (missing$na_estr3/length(data$estr3))*100
+missing$na_estr4 <- length(data$estr4)-length(na.omit(data$estr4))
+missing$percna_estr4 <- (missing$na_estr4/length(data$estr4))*100
+missing$na_test1 <- length(data$test1)-length(na.omit(data$test1))
+missing$percna_test1 <- (missing$na_test1/length(data$test1))*100
+missing$na_test2 <- length(data$test2)-length(na.omit(data$test2))
+missing$percna_test2 <- (missing$na_test2/length(data$test2))*100
+missing$na_test3 <- length(data$test3)-length(na.omit(data$test3))
+missing$percna_test3 <- (missing$na_test3/length(data$test3))*100
+missing$na_test4 <- length(data$test4)-length(na.omit(data$test4))
+missing$percna_test4 <- (missing$na_test4/length(data$test4))*100
+
+missing$na_dhea_hair <- length(data$dhea_hair)-length(na.omit(data$dhea_hair))
+missing$percna_dhea_hair <- (missing$na_dhea_hair/length(data$dhea_hair))*100
+missing$na_estr_hair <- length(data$estr_hair)-length(na.omit(data$estr_hair))
+missing$percna_estr_hair <- (missing$na_estr_hair/length(data$estr_hair))*100
+missing$na_test_hair <- length(data$test_hair)-length(na.omit(data$test_hair))
+missing$percna_test_hair <- (missing$na_test_hair/length(data$test_hair))*100
+
+missing$na_PDS1 <- length(data$PDS1)-length(na.omit(data$PDS1))
+missing$percna_PDS1 <- (missing$na_PDS1/length(data$PDS1))*100
+missing$na_PDS2 <- length(data$PDS2)-length(na.omit(data$PDS2))
+missing$percna_PDS2 <- (missing$na_PDS2/length(data$PDS2))*100
+missing$na_PDS3 <- length(data$PDS3)-length(na.omit(data$PDS3))
+missing$percna_PDS3 <- (missing$na_PDS3/length(data$PDS3))*100
+missing$na_PDS4 <- length(data$PDS4)-length(na.omit(data$PDS4))
+missing$percna_PDS4 <- (missing$na_PDS4/length(data$PDS4))*100
+missing$na_PDS6 <- length(data$PDS6)-length(na.omit(data$PDS6))
+missing$percna_PDS6 <- (missing$na_PDS6/length(data$PDS6))*100
+missing$na_PBIP1 <- length(data$PBIP1)-length(na.omit(data$PBIP1))
+missing$percna_PBIP1 <- (missing$na_PBIP1/length(data$PBIP1))*100
+missing$na_PBIP2 <- length(data$PBIP2)-length(na.omit(data$PBIP2))
+missing$percna_PBIP2 <- (missing$na_PBIP2/length(data$PBIP2))*100
+
 # Specifying PDS & PBIP variables as ordinal
 data_ord <- data
 data_menarche <- data
