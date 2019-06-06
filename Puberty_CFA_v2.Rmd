@@ -1,6 +1,6 @@
 ---
 title: "Puberty CFA version 2"
-author: "Sam Chavez and Michelle Byrne but mostly Sam"
+author: "Sam Chavez and Michelle Byrne"
 date: "May 27, 2019"
 output: html_document
 ---
@@ -336,21 +336,19 @@ fit_model_sr4_pml <- cfa(model_sr4, data = data, estimator = "PML",
 
 #anova(fit_model_sr1_ord, fit_model_sr1_ord_nocov)
 #anova(fit_model_sr1_ord_noPDS1, fit_model_sr1_ord_noPDS1_nocov)
-anova(fit_model_sr3_pml, fit_model_sr1_pml_nocov)
+anova(fit_model_sr3_pml, fit_model_sr1_pml_nocov) # 1 factor models
 #anova(fit_model_sr1_pml_noPDS1, fit_model_sr1_pml_noPDS1_nocov)
 #anova(fit_model_sr2_ord, fit_model_sr2_ord_nocov)
 #anova(fit_model_sr2_ord_noPDS1, fit_model_sr2_ord_noPDS1_nocov)
-anova(fit_model_sr4_pml, fit_model_sr2_pml_nocov)
+anova(fit_model_sr4_pml, fit_model_sr2_pml_nocov) # 2 factor models
 #anova(fit_model_sr2_pml_noPDS1, fit_model_sr2_pml_noPDS1_nocov)
 #For all models, adding covariances for self-report Qs does not increase model fit indices.
-
 
 
 #Should we include PDS1?
 #fitmeasures(fit_model_sr1_ord_nocov,
 #            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 #summary(fit_model_sr1_ord_nocov, fit.measures = T, standardized = T)
-
 #fitmeasures(fit_model_sr1_ord_noPDS1_nocov,
 #            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 #fitmeasures(fit_model_sr1_pml_nocov,
@@ -358,8 +356,6 @@ anova(fit_model_sr4_pml, fit_model_sr2_pml_nocov)
 #fitmeasures(fit_model_sr1_pml_noPDS1_nocov,
 #            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 #model with PDS1 is slightly better for most fit indices in AG models
-
-
 #fitmeasures(fit_model_sr2_ord_nocov,
 #            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 #summary(fit_model_sr2_ord_nocov, fit.measures = T, standardized = T)
@@ -411,8 +407,10 @@ fitmeasures(fit_model_sr4_pml,
 ```
 
 
-## Step 2: Hormone Models - Saliva + Hair. All have no equality Constraints
+## Step 2: Hormone Models - Saliva + Hair. All have no equality constraints. 
 ```{r HMs}
+# First we run all four models WITH BOTH latent hormone (DHEA, T, E2) and neuroendocrine (ADR, GON, PUB) variables. Even though the one- and two-factor models are equivalent
+
 # Define HM1 - one factor, no covariances, hair + saliva
 hm1 <- "
 #Latent Saliva Variables
@@ -430,8 +428,11 @@ puberty =~ dhea + estr + test
 
 "
 
-# Fit HM1
-fit_hm1 <- cfa(hm1, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+# Fit HM1 - can only get MLR to converge:
+
+fit_hm1 <- cfa(hm1, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") #even with MLR, some estimated lv variances are negative
+
+#fit_hm1 <- cfa(hm1, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") #the optimizer warns that a solution has NOT been found!
 
 # Summary Stats for HM1
 summary(fit_hm1, fit.measures = T, standardized = T)
@@ -459,12 +460,15 @@ adrenal =~ dhea + test
 
 "
 
-# Fit HM2
-fit_hm2 <- cfa(hm2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") #the optimizer warns that a solution has NOT been found!
+# Fit HM2 - can only get PML to converge:
+
+#fit_hm2 <- cfa(hm2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") #the optimizer warns that a solution has NOT been found!
+
+fit_hm2 <- cfa(hm2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") # some dodgy stuff still happens but you can still get some estimates
 
 # Summary Stats for HM2
 summary(fit_hm2, fit.measures = T, standardized = T)
-fitMeasures(fit_hm2)
+fitMeasures(fit_hm2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of HM2
 semPaths(fit_hm2)
@@ -501,17 +505,22 @@ estr_hair ~~ test_hair
 
 # Fit HM3
 fit_hm3 <- cfa(hm3, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+fit_hm3_pml <- cfa(hm3, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr")
 
 # Summary Stats for HM3
 summary(fit_hm3, fit.measures = T, standardized = T)
 fitMeasures(fit_hm3,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
+summary(fit_hm3_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_hm3_pml,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+
 # Pictoral Representation of HM3
 semPaths(fit_hm3)
 
 
-# Define HM4 - two factors, WITH covariances, hair + saliva
+# Define HM4 - two factors, WITH covariances, hair + saliva 
 hm4 <- "
 #Latent Saliva Variables
 sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
@@ -541,22 +550,181 @@ dhea_hair ~~ estr_hair + test_hair
 estr_hair ~~ test_hair
 "
 
-# Fit HM4
-fit_hm4 <- cfa(hm4, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") # doesn't work with ML/MLR either
+# Fit HM4 - only PML converges:
+
+#fit_hm4 <- cfa(hm4, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") #the optimizer warns that a solution has NOT been found! 
+fit_hm4_pml <- cfa(hm4, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
 
 # Summary Stats for HM4
-summary(fit_hm4, fit.measures = T, standardized = T)
-fitMeasures(fit_hm4)
+#summary(fit_hm4, fit.measures = T, standardized = T)
+#fitMeasures(fit_hm4, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_hm4_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_hm4_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of HM4
 semPaths(fit_hm4)
 
+lavTestLRT(fit_hm1, fit_hm3)
+lavTestLRT(fit_hm2, fit_hm4_pml)
+
+lavTestLRT(fit_hm1, fit_hm2)
+lavTestLRT(fit_hm3, fit_hm4_pml)
+
+
+# Second, we run all four models without the latent hormone (DHEA, T, E2) variables and everything loads directly onto neuroendocrine (ADR, GON, PUB) variables. These are HMv2 (hormone models version 2)
+
+# Define HM1v2 - one factor, no covariances, hair + saliva
+hm1v2 <- "
+#Latent Saliva Variables
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+puberty =~ sal_dhea + sal_estr + sal_test + dhea_hair + estr_hair + test_hair
+
+"
+
+# Fit HM1v2:
+
+fit_hm1v2 <- cfa(hm1v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
+
+fit_hm1v2_pml <- cfa(hm1v2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+
+# Summary Stats for HM1
+summary(fit_hm1v2, fit.measures = T, standardized = T)
+fitMeasures(fit_hm1v2,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_hm1v2_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_hm1v2_pml,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+
+# Pictoral Representation of HM1
+semPaths(fit_hm1v2)
+semPaths(fit_hm1v2_pml)
+
+# Define HM2 - two factors, no covariances, hair + saliva
+hm2v2 <- "
+#Latent Saliva Variables
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test + dhea_hair + test_hair
+gonadal =~ sal_estr + estr_hair
+"
+
+# Fit HM2v2:
+
+fit_hm2v2 <- cfa(hm2v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
+fit_hm2v2_pml <- cfa(hm2v2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+
+# Summary Stats for HM2v2
+summary(fit_hm2v2, fit.measures = T, standardized = T)
+fitMeasures(fit_hm2v2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_hm2v2_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_hm2v2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+
+# Pictoral Representation of HM2v2
+semPaths(fit_hm2v2)
+semPaths(fit_hm2v2_pml)
+
+# Define HM3v2 - one factor, WITH covariances, hair + saliva
+hm3v2 <- "
+#Latent Saliva Variables
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+puberty =~ sal_dhea + sal_estr + sal_test + dhea_hair + estr_hair + test_hair
+
+#Covariances for Saliva Sample Day 
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#Covariances for Hair Sample 
+dhea_hair ~~ estr_hair + test_hair
+estr_hair ~~ test_hair
+"
+
+# Fit HM3v2
+fit_hm3v2 <- cfa(hm3v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+fit_hm3v2_pml <- cfa(hm3v2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr")
+
+# Summary Stats for HM3
+summary(fit_hm3v2, fit.measures = T, standardized = T)
+fitMeasures(fit_hm3v2,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+
+summary(fit_hm3v2_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_hm3v2_pml,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+
+# Pictoral Representation of HM3v2
+semPaths(fit_hm3v2)
+semPaths(fit_hm3v2_pml)
+
+# Define HM4v2 - two factors, WITH covariances, hair + saliva 
+hm4v2 <- "
+#Latent Saliva Variables
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test + dhea_hair + test_hair
+gonadal =~ sal_estr + estr_hair
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#Covariances for Hair Sample 
+dhea_hair ~~ estr_hair + test_hair
+estr_hair ~~ test_hair
+"
+
+# Fit HM4v2:
+
+fit_hm4v2 <- cfa(hm4v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
+fit_hm4v2_pml <- cfa(hm4v2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+
+# Summary Stats for HM4v2
+summary(fit_hm4v2, fit.measures = T, standardized = T)
+fitMeasures(fit_hm4v2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_hm4v2_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_hm4v2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+
+# Pictoral Representation of HM4
+semPaths(fit_hm4v2)
+semPaths(fit_hm4v2_pml)
+
+#Compare models
+lavTestLRT(fit_hm1v2_pml, fit_hm3v2_pml) # 1 factor with or w/o covar?
+lavTestLRT(fit_hm2v2_pml, fit_hm4v2_pml) # 2 factor with or w/o covar?
+
+lavTestLRT(fit_hm1v2_pml, fit_hm2v2_pml) # 1 or 2 factor w/o covar?
+lavTestLRT(fit_hm3v2_pml, fit_hm4v2_pml) # 1 or 2 factor with covar?
+
 ```
 
-## Step 3: Hormone Models - Saliva ONLY. All have no equality Constraints
-```{r SalMs}
+## Step 3: Post hoc Hormone Models 1 - Saliva ONLY. All have no equality Constraints
+```{r SLMs}
 # Define SLM1 - one factor, no covariances, saliva
-# NEED TO UPDATE FROM HERE ONWARD
 slm1 <- "
 #Latent Saliva Variables
 dhea =~ dhea1 + dhea2 + dhea3 + dhea4
@@ -565,19 +733,22 @@ test =~ test1 + test2 + test3 + test4
 
 #Latent Neuroendocrine Systems
 puberty =~ dhea + estr + test
-
 "
 
 # Fit SLM1
 fit_slm1 <- cfa(slm1, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+fit_slm1_pml <- cfa(slm1, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr")
 
 # Summary Stats for SLM1
 summary(fit_slm1, fit.measures = T, standardized = T)
 fitMeasures(fit_slm1,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_slm1_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_slm1_pml,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of HM1
-semPaths(fit_hm1)
+semPaths(fit_slm1)
 
 
 # Define SLM2 - two factors, no covariances, saliva only
@@ -589,15 +760,17 @@ test =~ test1 + test2 + test3 + test4
 
 #Latent Neuroendocrine Systems
 adrenal =~ dhea + test
-
 "
 
 # Fit SLM2
 fit_slm2 <- cfa(slm2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
+fit_slm2_pml <- cfa(slm2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
 
 # Summary Stats for SLM2
 summary(fit_slm2, fit.measures = T, standardized = T)
-fitMeasures(fit_slm2)
+fitMeasures(fit_slm2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_slm2_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_slm2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of SLM2
 semPaths(fit_slm2)
@@ -625,27 +798,26 @@ estr4 ~~ test4
 
 # Fit SLM3
 fit_slm3 <- cfa(slm3, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+fit_slm3_pml <- cfa(slm3, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr")
 
 # Summary Stats for SLM3
 summary(fit_slm3, fit.measures = T, standardized = T)
 fitMeasures(fit_slm3,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_slm3_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_slm3_pml,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of SLM3
 semPaths(fit_slm3)
-
+semPaths(fit_slm3_pml)
 
 # Define HM4 - two factors, WITH covariances, hair + saliva
-hm4 <- "
+slm4 <- "
 #Latent Saliva Variables
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Latent Hormone Variables
-dhea =~ sal_dhea + dhea_hair
-estr =~ sal_estr + estr_hair
-test =~ sal_test + test_hair
+dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+estr =~ estr1 + estr2 + estr3 + estr4
+test =~ test1 + test2 + test3 + test4
 
 #Latent Neuroendocrine Systems
 adrenal =~ dhea + test
@@ -659,98 +831,31 @@ dhea3 ~~ estr3 + test3
 estr3 ~~ test3
 dhea4 ~~ estr4 + test4
 estr4 ~~ test4
-
-#Covariances for Hair Sample 
-dhea_hair ~~ estr_hair + test_hair
-estr_hair ~~ test_hair
 "
 
-# Fit HM4
-fit_hm4 <- cfa(hm4, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") # doesn't work with ML/MLR either
+# Fit SLM4
+fit_slm4 <- cfa(slm4, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+fit_slm4_pml <- cfa(slm4, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
 
 # Summary Stats for HM4
-summary(fit_hm4, fit.measures = T, standardized = T)
-fitMeasures(fit_hm4)
+summary(fit_slm4, fit.measures = T, standardized = T)
+fitMeasures(fit_slm4, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_slm4_pml, fit.measures = T, standardized = T)
+fitMeasures(fit_slm4_plm, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of HM4
-semPaths(fit_hm4)
+semPaths(fit_slm4)
+
+# Here's where we realize that SLM2 and 4 are pointless because they're equivalent to 1 and 3. So, here we only compare 1 and 3 (one-factor models):
+lavTestLRT(fit_slm1_pml, fit_slm3_pml) # 1 factor with or w/o covar?
 
 ```
 
 
-```{r Saliva Model 1 - Correlated Uniqueness - No Equality Constraints}
-# Model 1 - PWG Meeting Notes... Saliva only and all hormone latent variables covary with each other
-
-# Define Model 1 -Corrs for Days
-model1 <- "
-#Latent Hormone Variables
-dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-estr =~ estr1 + estr2 + estr3 + estr4
-test =~ test1 + test2 + test3 + test4
-
-#Covariances for Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-"
-
-# Fit Model 1
-fit_model1 <- cfa(model1, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
-
-# Summary Stats for Model 1
-summary(fit_model1, fit.measures = T, standardized = T)
-fitMeasures(fit_model1)
-
-# Pictoral Representation of Model 1
-semPaths(fit_model1)
-```
-
-## Biological Measurement Models - Saliva Only - Yes Equality Constraints
-```{r Saliva Model 2 - Correlated Uniqueness + equaltiy constraints}
-# Define Model 2
-model2 <- "
-#Latent Hormone Variables
-sal_dhea =~ dhea1 + a*dhea2 + a*dhea3 + a*dhea4
-sal_estr =~ estr1 + b*estr2 + b*estr3 + b*estr4
-sal_test =~ test1 + c*test2 + c*test3 + c*test4
-
-#Covariances for Sample Day
-dhea1 ~~ d*estr1 + e*test1
-estr1 ~~ f*test1
-dhea2 ~~ d*estr2 + e*test2
-estr2 ~~ f*test2
-dhea3 ~~ d*estr3 + e*test3
-estr3 ~~ f*test3
-dhea4 ~~ d*estr4 + e*test4
-estr4 ~~ f*test4
-"
-# Fit Model 2
-fit_model2 <- cfa(model2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
-
-# Summary Stats for Model 2
-summary(fit_model2, fit.measures = T, standardized = T)
-fitMeasures(fit_model2)
-
-# Pictoral Representation of Model 2
-semPaths(fit_model2)
-
-# Comparing Model 1 vs. Model 2 Fit
-lrtest(fit_model2,fit_model1)
-lavTestLRT(fit_model2, fit_model1)
-
-# no equality constraints fits the data better... what does that mean?  Probably overfitting... thoughts?
-```
-
-
-## Biological Measurement Models - Hair Predicts Saliva
-```{r Saliva + Hair Model 5 - Hair Predicts Saliva}
-# Define Model 5
-model5 <- "
+## Step 4 - Post hoc hormone Models 2 - Hair Predicts Saliva
+```{r Hair Predicts Saliva}
+# Define HSM1 (hair saliva model with method factors)
+hsm1 <- "
 #Latent Saliva Variables
 sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
 sal_estr =~ estr1 + estr2 + estr3 + estr4
@@ -779,8 +884,8 @@ saliva =~ sal_dhea + sal_estr + sal_test
 hair ~~ 0*saliva
 "
 
-# Define Model 5A - No methods factors
-model5A <- "
+# Define HSM2 - No methods factors
+hsm2 <- "
 #Latent Saliva Variables
 sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
 sal_estr =~ estr1 + estr2 + estr3 + estr4
@@ -802,257 +907,33 @@ dhea4 ~~ estr4 + test4
 estr4 ~~ test4
 "
 
-# Fit Model 5 All Data
-fit_model5 <- cfa(model5, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+# Fit HSM1 All Data
+fit_hsm1 <- cfa(hsm1, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+fit_hsm1_pml <- cfa(hsm1, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr")
 
-# Fit Model 5 Data with Complete E2 Hair
-fit_model5_E2hair <- cfa(model5, data = hormones_complete_E2hair, missing = "ML", estimator = "MLR", se = "robust.mlr")
+# Summary Stats for HSM1
+summary(fit_hsm1, fit.measures = T, standardized = T) 
+fitMeasures(fit_hsm1, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_hsm1_pml, fit.measures = T, standardized = T) 
+fitMeasures(fit_hsm1_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
-# Summary Stats for Model 5
-summary(fit_model5, fit.measures = T, standardized = T) 
-fitMeasures(fit_model5)
-#all, 
-summary(fit_model5_E2hair, fit.measures=T, standardized=T)
-fitMeasures(fit_model5_E2hair)
-#E2 hair complete data,
+# Fit Model HSM2
+fit_hsm2 <- cfa(hsm2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+fit_hsm2_pml <- cfa(hsm2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr")
 
-# Fit Model 5A All Data
-fit_model5A <- cfa(model5A, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+# Summary Stats for HSM2
+summary(fit_hsm2, fit.measures = T, standardized = T) 
+fitMeasures(fit_hsm2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_hsm2_pml, fit.measures = T, standardized = T) 
+fitMeasures(fit_hsm2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
-# Fit Model 5A Data with Complete E2 Hair
-fit_model5A_E2hair <- cfa(model5A, data = hormones_complete_E2hair, missing = "ML", estimator = "MLR", se = "robust.mlr")
+# Pictoral Representation of HSMs
+semPaths(fit_hsm1_pml)
+semPaths(fit_hsm2_pml)
 
-# Summary Stats for Model 5A
-summary(fit_model5A, fit.measures = T, standardized = T) 
-#all, E2hair predict E2sal p=0.002 (standardized estimate=0.354)
-summary(fit_model5A_E2hair, fit.measures=T, standardized=T)
-#E2 hair complete data, E2hair predict E2sal p=0.004 (standardized estimate=0.351)
-
-# Pictoral Representation of Model 5
-semPaths(fit_model5)
-semPaths(fit_model5A)
-
-# Comparing Model Fits
-anova(fit_model3, fit_model5)
-anova(fit_model4, fit_model5)
-lrtest(fit_model3, fit_model5)
-lrtest(fit_model4, fit_model5)
-
-# Comparing All Data vs. Complete E2 Hair Data
-fitmeasures(fit_model5,
-            fit.measures = c("cfi","ecvi","mfi"))
-fitmeasures(fit_model5_E2hair,
-            fit.measures = c("cfi","ecvi","mfi"))
-
-# what should we do with this?  using hair to predict saliva-only puberty model... estradiol is significant...
-```
-
-## Biological Measurement Models - Saliva Only - No Equality Constraints - A+G
-```{r Saliva Model 6 - Correlated Uniqueness - No Equality Constraints - A+G}
-
-# Define Model 6 -Corrs for Days + AG Factors
-model6_AG_sal <- "
-#Latent Hormone Variables
-dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-gonadal =~ estr1 + estr2 + estr3 + estr4
-test =~ test1 + test2 + test3 + test4
-
-#AG
-adrenal =~ dhea + test
-
-#Covariances for Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-
-#Set Some Latent Var Covariances to Zero
-gonadal ~~ 0*test + 0*dhea
-"
-
-# Fit Model 6
-fit_model6_AG_sal <- cfa(model6_AG_sal, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
-
-# Summary Stats for Model 6
-summary(fit_model6_AG_sal, fit.measures = T, standardized = T)
-fitMeasures(fit_model6_AG_sal)
-
-# Pictoral Representation of Model 6
-semPaths(fit_model6_AG_sal)
-```
-
-## Biological Measurement Models - Saliva Only - No Equality Constraints - P
-```{r Saliva Model 7 - Correlated Uniqueness - No Equality Constraints - P}
-
-# Define Model 7 -Corrs for Days + P Factor
-model7_P_sal <- "
-#Latent Hormone Variables
-dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-estr =~ estr1 + estr2 + estr3 + estr4
-test =~ test1 + test2 + test3 + test4
-
-#Puberty
-puberty =~ dhea + estr + test
-
-#Covariances for Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-"
-
-# Fit Model 7
-fit_model7_P_sal <- cfa(model7_P_sal, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
-
-# Summary Stats for Model 7
-summary(fit_model7_P_sal, fit.measures = T, standardized = T)
-summary(fit_model6_AG_sal, fit.measures = T, standardized = T)
-# Fit indices for P vs. AG models are nearly identical.
-# Based on previous criteria, it may be more appropriate to choose P model.  
-# The standardized loading for estradiol onto a latent puberty factor is 0.617 (just above our threshold)
-
-# Pictoral Representation of Model 7
-semPaths(fit_model7_P_sal)
-
-# Compare Model Fit for A+G vs P
-fitmeasures(fit_model6_AG_sal,
-            fit.measures = c("cfi","ecvi","mfi", "rmsea", "df"))
-fitmeasures(fit_model7_P_sal,
-            fit.measures = c("cfi","ecvi","mfi", "rmsea", "df"))
-#AG vs P are equivalent with saliva only
-```
-
-## Biological Measurement Models - Saliva and Hair - No Equality Constraints - A+G
-```{r Saliva and Hair Model 8 - Correlated Uniqueness - No Equality Constraints - A+G}
-
-# Define Model 8 -Corrs for Days + AG Factors
-model8_AG_bio <- "
-#Latent Salivary Hormone Variables
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Latent Bio Hormone Variables
-dhea =~ sal_dhea + dhea_hair
-gonadal =~ sal_estr + estr_hair
-test =~ sal_test + test_hair
-
-#AG
-adrenal =~ dhea + test
-
-#Covariances for Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-
-#Covariances for Hair Sample
-dhea_hair ~~ estr_hair + test_hair
-estr_hair ~~ test_hair
-
-#Set Some Latent Var Covariances to Zero
-gonadal ~~ 0*dhea + 0*test
-
-#Model A -- G covariance
-adrenal ~~ gonadal
-"
-
-# Fit Model 8
-# This model is too unstable to converge.  Hair is messing everything up.
-fit_model8_AG_bio <- cfa(model8_AG_bio, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
-
-# Summary Stats for Model 8
-summary(fit_model8_AG_bio, fit.measures = T, standardized = T)
-
-# Pictoral Representation of Model 8
-semPaths(fit_model8_AG_bio)
-```
-## Biological Measurement Models - Saliva and Hair - No Equality Constraints - P
-```{r Bio Model 9 - Correlated Uniqueness - No Equality Constraints - P}
-
-# Define Model 9 -Corrs for Days + P Factor
-model9_P_bio <- "
-#Latent Salivary Hormone Variables
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Latent Bio Hormone Variables
-dhea =~ sal_dhea + dhea_hair
-estr =~ sal_estr + estr_hair
-test =~ sal_test + test_hair
-
-#Puberty
-puberty =~ dhea + estr + test
-
-#Covariances for Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-
-#Covariances for Hair Sample
-dhea_hair ~~ estr_hair + test_hair
-estr_hair ~~ test_hair
-"
-
-# Fit Model 9
-fit_model9_P_bio <- cfa(model9_P_bio, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
-
-# Summary Stats for Model 9
-summary(fit_model9_P_bio, fit.measures = T, standardized = T)
-summary(fit_model8_AG_bio, fit.measures = T, standardized = T)
-
-# Pictoral Representation of Model 7
-semPaths(fit_model7_P_sal)
-
-# Compare Model Fit for A+G vs P
-fitmeasures(fit_model6_AG_sal,
-            fit.measures = c("cfi","ecvi","mfi"))
-fitmeasures(fit_model7_P_sal,
-            fit.measures = c("cfi","ecvi","mfi"))
-#AG vs P are equivalent with saliva only
-fitmeasures(fit_model8_AG_bio,
-            fit.measures = c("cfi","ecvi","mfi"))
-fitmeasures(fit_model9_P_bio,
-            fit.measures = c("cfi","ecvi","mfi"))
-
-```
-
-```{r Biological Vars & Self-Report Quick Descriptives}
-# Self-Report Questions
-
-# Rank-Order Correlations among Self-Report Qs
-# Which items do we want to include? And on which factors? Theory-driven or data-driven approach?
-cor(data[,17:23], method = "spearman", use = "complete.obs")
-
-res_all <- cor(data[,2:23], method = "spearman", use = "complete.obs")
-res_bio <- cor(data[,2:16], method = "pearson", use = "complete.obs")
-res_sal_srqs <- cor(data[,c(2:13,17:23)], method = "spearman", use = "complete.obs")
-
-# Correlation Plots
-corrplot(res_all, type = "upper", order = "hclust",
-         tl.col = "black", tl.srt = 45, main = "Spearman Correlation Plot of All Variables")
-corrplot(res_bio, type = "upper", order = "hclust",
-         tl.col = "black", tl.srt = 45, main = "Pearson Correlation Plot of Biological Variables")
-corrplot(res_sal_srqs, type = "upper", order = "hclust",
-         tl.col = "black", tl.srt = 45, main = "Spearman Correlation Plot of Just Saliva & Self-Report Vars")
+# Comparing Model Fits - wait these don't work
+anova(fit_hsm1, fit_hsm2)
+lrtest(fit_hsm1, fit_hsm2)
 
 ```
 
