@@ -464,14 +464,14 @@ adrenal =~ dhea + test
 
 #fit_hm2 <- cfa(hm2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") #the optimizer warns that a solution has NOT been found!
 
-fit_hm2 <- cfa(hm2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") # some dodgy stuff still happens but you can still get some estimates
+fit_hm2_pml <- cfa(hm2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") # some dodgy stuff still happens but you can still get some estimates
 
 # Summary Stats for HM2
-summary(fit_hm2, fit.measures = T, standardized = T)
-fitMeasures(fit_hm2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_hm2_pml <- summary(fit_hm2_pml, fit.measures = T, standardized = T)
+fitmea_hm2_pml <- fitMeasures(fit_hm2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of HM2
-semPaths(fit_hm2)
+semPaths(fit_hm2_pml)
 
 # Define HM3 - one factor, WITH covariances, hair + saliva
 hm3 <- "
@@ -512,9 +512,10 @@ summary(fit_hm3, fit.measures = T, standardized = T)
 fitMeasures(fit_hm3,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
-summary(fit_hm3_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_hm3_pml,
-            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_hm3_pml <- summary(fit_hm3_pml, fit.measures = T, standardized = T)
+fitmea_hm3_pml <- fitMeasures(fit_hm3_pml,
+                              fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                               "rmsea"))
 
 # Pictoral Representation of HM3
 semPaths(fit_hm3)
@@ -558,8 +559,10 @@ fit_hm4_pml <- cfa(hm4, data = hormones, missing = "available.cases", estimator 
 # Summary Stats for HM4
 #summary(fit_hm4, fit.measures = T, standardized = T)
 #fitMeasures(fit_hm4, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_hm4_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_hm4_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_hm4_pml <- summary(fit_hm4_pml, fit.measures = T, standardized = T)
+fitmea_hm4_pml <- fitMeasures(fit_hm4_pml, 
+                              fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                               "rmsea"))
 
 # Pictoral Representation of HM4
 semPaths(fit_hm4)
@@ -595,9 +598,10 @@ fit_hm1v2_pml <- cfa(hm1v2, data = hormones, missing = "available.cases", estima
 summary(fit_hm1v2, fit.measures = T, standardized = T)
 fitMeasures(fit_hm1v2,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_hm1v2_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_hm1v2_pml,
-            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_hm1v2_pml <- summary(fit_hm1v2_pml, fit.measures = T, standardized = T)
+fitmea_hm1v2_pml <- fitMeasures(fit_hm1v2_pml,
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                 "rmsea"))
 
 # Pictoral Representation of HM1
 semPaths(fit_hm1v2)
@@ -623,8 +627,10 @@ fit_hm2v2_pml <- cfa(hm2v2, data = hormones, missing = "available.cases", estima
 # Summary Stats for HM2v2
 summary(fit_hm2v2, fit.measures = T, standardized = T)
 fitMeasures(fit_hm2v2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_hm2v2_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_hm2v2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_hm2v2_pml <- summary(fit_hm2v2_pml, fit.measures = T, standardized = T)
+fitmea_hm2v2_pml <- fitMeasures(fit_hm2v2_pml, 
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                 "rmsea"))
 
 # Pictoral Representation of HM2v2
 semPaths(fit_hm2v2)
@@ -664,9 +670,10 @@ summary(fit_hm3v2, fit.measures = T, standardized = T)
 fitMeasures(fit_hm3v2,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
-summary(fit_hm3v2_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_hm3v2_pml,
-            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_hm3v2_pml <- summary(fit_hm3v2_pml, fit.measures = T, standardized = T)
+fitmea_hm3v2_pml <- fitMeasures(fit_hm3v2_pml,
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                 "rmsea"))
 
 # Pictoral Representation of HM3v2
 semPaths(fit_hm3v2)
@@ -706,8 +713,10 @@ fit_hm4v2_pml <- cfa(hm4v2, data = hormones, missing = "available.cases", estima
 # Summary Stats for HM4v2
 summary(fit_hm4v2, fit.measures = T, standardized = T)
 fitMeasures(fit_hm4v2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_hm4v2_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_hm4v2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_hm4v2_pml <- summary(fit_hm4v2_pml, fit.measures = T, standardized = T)
+fitmea_hm4v2_pml <- fitMeasures(fit_hm4v2_pml, 
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                 "rmsea"))
 
 # Pictoral Representation of HM4
 semPaths(fit_hm4v2)
@@ -743,9 +752,10 @@ fit_slm1_pml <- cfa(slm1, data = hormones, missing = "available.cases", estimato
 summary(fit_slm1, fit.measures = T, standardized = T)
 fitMeasures(fit_slm1,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_slm1_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_slm1_pml,
-            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_slm1_pml <- summary(fit_slm1_pml, fit.measures = T, standardized = T)
+fitmea_slm1_pml <- fitMeasures(fit_slm1_pml,
+                               fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                "rmsea"))
 
 # Pictoral Representation of HM1
 semPaths(fit_slm1)
@@ -769,8 +779,10 @@ fit_slm2_pml <- cfa(slm2, data = hormones, missing = "available.cases", estimato
 # Summary Stats for SLM2
 summary(fit_slm2, fit.measures = T, standardized = T)
 fitMeasures(fit_slm2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_slm2_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_slm2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_slm2_pml <- summary(fit_slm2_pml, fit.measures = T, standardized = T)
+fitmea_slm2_pml <- fitMeasures(fit_slm2_pml, 
+                               fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                "rmsea"))
 
 # Pictoral Representation of SLM2
 semPaths(fit_slm2)
@@ -804,9 +816,10 @@ fit_slm3_pml <- cfa(slm3, data = hormones, missing = "available.cases", estimato
 summary(fit_slm3, fit.measures = T, standardized = T)
 fitMeasures(fit_slm3,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_slm3_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_slm3_pml,
-            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_slm3_pml <- summary(fit_slm3_pml, fit.measures = T, standardized = T)
+fitmea_slm3_pml <- fitMeasures(fit_slm3_pml, 
+                               fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                "rmsea"))
 
 # Pictoral Representation of SLM3
 semPaths(fit_slm3)
@@ -840,8 +853,8 @@ fit_slm4_pml <- cfa(slm4, data = hormones, missing = "available.cases", estimato
 # Summary Stats for HM4
 summary(fit_slm4, fit.measures = T, standardized = T)
 fitMeasures(fit_slm4, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_slm4_pml, fit.measures = T, standardized = T)
-fitMeasures(fit_slm4_plm, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_slm4_pml <- summary(fit_slm4_pml, fit.measures = T, standardized = T)
+fitmea_slm4_pml <- fitMeasures(fit_slm4_plm, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of HM4
 semPaths(fit_slm4)
@@ -914,8 +927,8 @@ fit_hsm1_pml <- cfa(hsm1, data = hormones, missing = "available.cases", estimato
 # Summary Stats for HSM1
 summary(fit_hsm1, fit.measures = T, standardized = T) 
 fitMeasures(fit_hsm1, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_hsm1_pml, fit.measures = T, standardized = T) 
-fitMeasures(fit_hsm1_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_hsm1_pml <- summary(fit_hsm1_pml, fit.measures = T, standardized = T) 
+fitmea_hsm1_pml <- fitMeasures(fit_hsm1_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Fit Model HSM2
 fit_hsm2 <- cfa(hsm2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
@@ -924,8 +937,8 @@ fit_hsm2_pml <- cfa(hsm2, data = hormones, missing = "available.cases", estimato
 # Summary Stats for HSM2
 summary(fit_hsm2, fit.measures = T, standardized = T) 
 fitMeasures(fit_hsm2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-summary(fit_hsm2_pml, fit.measures = T, standardized = T) 
-fitMeasures(fit_hsm2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+sum_hsm2_pml <- summary(fit_hsm2_pml, fit.measures = T, standardized = T) 
+fitmea_hsm2_pml <- fitMeasures(fit_hsm2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of HSMs
 semPaths(fit_hsm1_pml)
@@ -937,81 +950,11 @@ lrtest(fit_hsm1, fit_hsm2)
 
 ```
 
-```{r}
-# Define Full Model 0
-fullmod_0 <- "
-#Latent Variables
+Step 5: dracarys
+```{r FMs}
 
-#Saliva - Level 1
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Hormones (Saliva + Hair) - Level 2
-dhea =~ sal_dhea + dhea_hair
-estr =~ sal_estr + estr_hair
-test =~ sal_test + test_hair
-
-#Self-Report
-adrenal_sr =~ PDS2 + PDS3 + PBIP2
-gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
-
-#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
-adrenal =~ dhea + test + adrenal_sr
-gonadal =~ estr + gonadal_sr
-
-#Covariances for Saliva Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-
-#Covariances for Hair 
-dhea_hair ~~ estr_hair + test_hair
-estr_hair ~~ test_hair
-"
-
-# Fit Full Model 0
-fit_fullmod_0_wlsmv <- cfa(fullmod_0, data = data_ord, estimator = "WLSMV", 
-                       missing = "pairwise", verbose = T)
-
-fit_fullmod_0a <- cfa(fullmod_0, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr")
-
-summary(fit_fullmod_0a, fit.measures=T, standardized=T)
-summary(fit_fullmod_0_wlsmv, fit.measures=T, standardized=T)
-fitMeasures(fit_fullmod_0_wlsmv)
-# This line is more correct, but takes awhile to run...
-fit_fullmod_0_pml <- cfa(fullmod_0, data = data, estimator = "PML", 
-                      missing = "available.cases", verbose = T,  
-                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-                                 "PDS6","PBIP1","PBIP2"))
-
-# Summary Stats for Full Model 0
-summary(fit_fullmod_0_wlsmv, fit.measures = T, standardized = T)
-summary(fit_fullmod_0_pml, fit.measures = T, standardized = T)
-
-fit_fullmod_0_wlsmv_parest <- parameterEstimates(fit_fullmod_0_wlsmv)
-
-fit_fullmod_0_pml_parest <- parameterEstimates(fit_fullmod_0_pml)
-lavaan:::ctr_pml_plrt(fit_fullmod_0_pml)
-
-# Pictoral Representation of Full Model 0
-semPaths(fit_fullmod_0_wlsmv)
-semPaths(fit_fullmod_0_pml)
-
-fitmeasures(fit_fullmod_0_wlsmv,
-            fit.measures = c("cfi","ecvi","mfi"))
-fitmeasures(fit_fullmod_0_pml,
-            fit.measures = c("cfi","ecvi","mfi"))
-
-```
-```{r}
-#Full models with overall puberty factor instead of A+G
-fullmod_1 <- "
+#Define Full Model (FM)2 - one factor, including hair, second level factors (hormone and self-report)
+fm1 <- "
 #Latent Variables
 
 #Saliva - Level 1
@@ -1047,40 +990,132 @@ estr4 ~~ test4
 dhea_hair ~~ estr_hair + test_hair
 estr_hair ~~ test_hair
 
-
 "
 
-# Fit Full Model 1
-fit_fullmod_1_wlsmv <- cfa(fullmod_1, data = data_ord, estimator = "WLSMV", 
-                       missing = "pairwise", verbose = T)
-#can't run this...
-
-# This line is more correct, but takes awhile to run...
-fit_fullmod_1_pml <- cfa(fullmod_1, data = data, estimator = "PML", 
+# Fit FM1 - using PML (takes awhile to run - In past we have also used estimator = "WLSMV", missing = "pairwise")
+fit_fm1_pml <- cfa(fm1, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS1","PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for Full Model 1
-summary(fit_fullmod_1_wlsmv, fit.measures = T, standardized = T) # this won't run for me - MLB
-summary(fit_fullmod_1_pml, fit.measures = T, standardized = T) # this either - MLB
-summary(fit_fullmod_1_pml) # hell yes this works - MLB
+sum_fm1_pml <- summary(fit_fm1_pml, fit.measures = T, standardized = T) 
+fitmea_fm1_pml <- fitmeasures(fit_fm1_pml,
+            fit.measures = c("cfi","ecvi","mfi")) 
 
 # Pictoral Representation of Full Model 1
-semPaths(fit_fullmod_1_pml)
+semPaths(fit_fm1_pml)
 
-fitmeasures(fit_fullmod_1_pml,
-            fit.measures = c("cfi","ecvi","mfi")) # oh no - MLB
-fitmeasures(fit_fullmod_0_pml,
+
+# Define Full Model (FM)2 - two factor, including hair, second level factors (hormone and self-report)
+fm2 <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Hormones (Saliva + Hair) - Level 2
+dhea =~ sal_dhea + dhea_hair
+estr =~ sal_estr + estr_hair
+test =~ sal_test + test_hair
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ dhea + test + adrenal_sr
+gonadal =~ estr + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#Covariances for Hair 
+dhea_hair ~~ estr_hair + test_hair
+estr_hair ~~ test_hair
+"
+
+# Fit FM2
+# We really need to use PML but it takes awhile to run. In past we have also used estimator = "WLSMV", missing = "pairwise")
+fit_fm2_pml <- cfa(fm2, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+# Summary Stats for FM2
+sum_fm2_pml <- summary(fit_fm2_pml, fit.measures = T, standardized = T)
+fitmea_fm2_pml <- fitmeasures(fit_fm2_pml, fit.measures = c("cfi","ecvi","mfi"))
+fit_fm2_pml_parest <- parameterEstimates(fit_fm2_pml)
+lavaan:::ctr_pml_plrt(fit_fm2_pml)
+
+# Pictoral Representation of FM2
+semPaths(fit_fm2_pml)
+fitmeasures(fit_fm2_pml,
             fit.measures = c("cfi","ecvi","mfi"))
-anova(fit_fullmod_0_pml, fit_fullmod_1_pml)
-lrtest(fit_fullmod_0_pml, fit_fullmod_1_pml)
 
-```
+#Compare two- and one-factor models that include hair
+anova(fit_fm2_pml, fit_fm1_pml) # spits out stupid numbers
+lrtest(fit_fm2_pml, fit_fm1_pml)
 
-```{r}
-# Define Full Model 2 - No Hair Variables
-fullmod_2 <- "
+
+# Define Full Model 3 - One factor, No Hair Variables 
+fm3 <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+pub_sr =~ PDS2 + PDS3 + PDS1 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+pub_bio =~ sal_dhea + sal_estr + sal_test
+
+#Puberty
+puberty =~ pub_sr + pub_bio
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+"
+
+# Fit Full Model 3
+fit_fm3_pml <- cfa(fm3, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+# Summary Stats for Full Model 3
+sum_fm3_pml <- summary(fit_fm3_pml, fit.measures = T, standardized = T)
+fitmea_fm3_pml <- fitmeasures(fit_fm3_pml,
+            fit.measures = c("cfi","ecvi","mfi"))
+
+# Pictoral Representation of Full Model 3
+semPaths(fit_fm3_pml)
+
+# Compare one factor with and without hair
+anova(fit_fm1_pml, fit_fm3_pml) # doesn't work I'm guessing cause you can't compare a model with different number of observed variables
+
+
+# Define Full Model 4 - Two-factor, No Hair Variables
+fm4 <- "
 #Latent Variables
 
 #Saliva - Level 1
@@ -1111,97 +1146,31 @@ estr4 ~~ test4
 a_bio ~~ 0*gonadal
 "
 
-# Fit Full Model 2
-fit_fullmod_2_wlsmv <- cfa(fullmod_2, data = data_ord, estimator = "WLSMV", 
-                       missing = "pairwise", verbose = T)
-
-# This line is more correct, but takes awhile to run...
-fit_fullmod_2_pml <- cfa(fullmod_2, data = data, estimator = "PML", 
+# Fit Full Model 4
+fit_fm4_pml <- cfa(fm4, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS2","PDS3","PDS1","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
-# Summary Stats for Full Model 2
-summary(fit_fullmod_2_wlsmv, fit.measures = T, standardized = T)
-summary(fit_fullmod_2_pml, fit.measures = T, standardized = T)
+# Summary Stats for Full Model 4
+sum_fm4_pml <- summary(fit_fm4_pml, fit.measures = T, standardized = T)
+fitmea_fm4_pml <- fitmeasures(fit_fm4_pml, fit.measures = c("cfi","ecvi","mfi"))
 
-# Pictoral Representation of Full Model 2
-semPaths(fit_fullmod_2_wlsmv)
+# Pictoral Representation of Full Model 4
+semPaths(fit_fm4_pml)
 
-fitmeasures(fit_fullmod_2_wlsmv,
-            fit.measures = c("cfi","ecvi","mfi"))
-fitmeasures(fit_fullmod_0_wlsmv,
-            fit.measures = c("cfi","ecvi","mfi"))
-fitmeasures(fit_fullmod_2_pml,
-            fit.measures = c("cfi","ecvi","mfi"))
-
-anova(fit_fullmod_0_wlsmv, fit_fullmod_2_wlsmv)
-# model with hair seems to fit better (see mfi for example)
+# Compare 2 factor with and without hair - wait I don't think you can do this
+anova(fit_fm4_pml, fit_fm2_pml)
+# Compare one and two factor without hair
+anova(fit_fm4_pml, fit_fm3_pml) # spits out stupid numbers
 
 
 ```
 
-```{r}
-# Define Full Model 3 - No Hair Variables - Puberty Factor Instead of A+G
-fullmod_3 <- "
-#Latent Variables
-
-#Saliva - Level 1
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Self-Report
-pub_sr =~ PDS2 + PDS3 + PDS1 + PDS4 + PDS6 + PBIP1 + PBIP2
-
-#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
-pub_bio =~ sal_dhea + sal_estr + sal_test
-
-#Puberty
-puberty =~ pub_sr + pub_bio
-
-#Covariances for Saliva Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-"
-
-# Fit Full Model 3
-fit_fullmod_3_wlsmv <- cfa(fullmod_3, data = data_ord, estimator = "WLSMV", 
-                       missing = "pairwise", verbose = T)
-
-# This line is more correct, but takes awhile to run...
-fit_fullmod_3_pml <- cfa(fullmod_3, data = data, estimator = "PML", 
-                      missing = "available.cases", verbose = T,  
-                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-                                 "PDS6","PBIP1","PBIP2"))
-
-# Summary Stats for Full Model 3
-summary(fit_fullmod_3_wlsmv, fit.measures = T, standardized = T)
-summary(fit_fullmod_3_pml, fit.measures = T, standardized = T)
-
-# Pictoral Representation of Full Model 3
-semPaths(fit_fullmod_3_wlsmv)
-semPaths(fit_fullmod_3_pml)
-
-fitmeasures(fit_fullmod_3_wlsmv,
-            fit.measures = c("cfi","ecvi","mfi"))
-fitmeasures(fit_fullmod_3_pml,
-            fit.measures = c("cfi","ecvi","mfi"))
-
-anova(fit_fullmod_1_wlsmv, fit_fullmod_3_wlsmv)
-anova(fit_fullmod_2_wlsmv, fit_fullmod_3_wlsmv)
-
-```
 
 ```{r Bio predicts Self-Report SEM}
-# Define SEM Model 1 - Does Salivary Puberty predict Self-Reported A + G?
-semmod_1 <- "
+# Define SEM Model 1 - Does Salivary A & G predict Self-Reported A & G?
+sem1 <- "
 #Latent Variables
 
 #Saliva - Level 1
@@ -1232,7 +1201,7 @@ estr4 ~~ test4
 "
 
 # Define SEM Model 2 - Does Salivary Puberty predict Self-Reported Puberty?
-semmod_2 <- "
+sem2 <- "
 #Latent Variables
 
 #Saliva
@@ -1261,40 +1230,34 @@ estr4 ~~ test4
 "
 
 # Fit SEM Model 1
-fit_semmod_1_wlsmv <- cfa(semmod_1, data = data_ord, estimator = "WLSMV", 
-                       missing = "pairwise", verbose = T)
-fit_semmod_1_pml <- cfa(semmod_1, data = data, estimator = "PML", 
+fit_sem1_pml <- cfa(sem1, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS2","PDS3","PDS1","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Pictoral Representation of SEM Model 1
-semPaths(fit_semmod_1_wlsmv)
+semPaths(fit_sem1_pml)
 
 # Summary Stats for SEM Model 1
-summary(fit_semmod_1_wlsmv, fit.measures = T, standardized = T)
-summary(fit_semmod_1_pml, fit.measures = T, standardized = T)
+sum_sem1_pml <- summary(fit_sem1_pml, fit.measures = T, standardized = T)
+fitmea_sem1_pml <- fitmeasures(fit_sem1_pml,
+            fit.measures = c("cfi","ecvi","mfi","pvalue"))
 
 # Fit SEM Model 2
-fit_semmod_2_wlsmv <- cfa(semmod_2, data = data_ord, estimator = "WLSMV", 
-                       missing = "pairwise", verbose = T)
-fit_semmod_2_pml <- cfa(semmod_2, data = data, estimator = "PML", 
+fit_sem2_pml <- cfa(sem2, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS2","PDS3","PDS1","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
 # Summary Stats for SEM Model 2
-summary(fit_semmod_2_wlsmv, fit.measures = T, standardized = T)
-summary(fit_semmod_2_pml, fit.measures = T, standardized = T)
+sum_sem2_pml <- summary(fit_sem2_pml, fit.measures = T, standardized = T)
+fitmea_sem2_pml <- fitmeasures(fit_sem2_pml,
+            fit.measures = c("cfi","ecvi","mfi","pvalue"))
 
-anova(fit_semmod_1_wlsmv, fit_semmod_2_wlsmv)
-semPaths(fit_semmod_2_wlsmv)
+semPaths(fit_sem2_pml)
 
 #Comparing Model Fits
-fitmeasures(fit_semmod_1_wlsmv,
-            fit.measures = c("cfi","ecvi","mfi","pvalue"))
-fitmeasures(fit_semmod_2_wlsmv,
-            fit.measures = c("cfi","ecvi","mfi","pvalue"))
+anova(fit_sem1_pml, fit_sem2_pml)
 ```
 
 ```{r}
