@@ -385,23 +385,27 @@ anova(fit_model_sr4_pml, fit_model_sr2_pml_nocov) # 2 factor models
 #data treated as ordinal, and wlsmv estimator (p<0.05)
 
 # One vs 2 factor for models - NO covariances
-summary(fit_model_sr1_pml_nocov, fit.measures = T, standardized = T)
-summary(fit_model_sr2_pml_nocov, fit.measures = T, standardized = T)
+sum_model_sr1_pml_nocov <- summary(fit_model_sr1_pml_nocov, fit.measures = T, standardized = T)
+sum_model_sr2_pml_nocov <- summary(fit_model_sr2_pml_nocov, fit.measures = T, standardized = T)
+
 lavTestLRT(fit_model_sr1_pml_nocov, fit_model_sr2_pml_nocov)
-fitmeasures(fit_model_sr1_pml_nocov,
+
+fitmea_model_sr1_pml_nocov <- fitmeasures(fit_model_sr1_pml_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
-fitmeasures(fit_model_sr2_pml_nocov,
+fitmea_model_sr2_pml_nocov <- fitmeasures(fit_model_sr2_pml_nocov,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
 #AG fits better than P for model with NO covariances between items of the same questionnaire,
 #data treated as ordinal, and pml estimator (p=0.09)
 
 # One vs 2 factor for models - WITH covariances
-summary(fit_model_sr3_pml, fit.measures = T, standardized = T)
-summary(fit_model_sr4_pml, fit.measures = T, standardized = T)
+sum_model_sr3_pml <- summary(fit_model_sr3_pml, fit.measures = T, standardized = T)
+sum_model_sr4_pml <- summary(fit_model_sr4_pml, fit.measures = T, standardized = T)
+
 lavTestLRT(fit_model_sr3_pml, fit_model_sr4_pml)
-fitmeasures(fit_model_sr3_pml,
+
+fitmea_model_sr3_pml <- fitmeasures(fit_model_sr3_pml,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
-fitmeasures(fit_model_sr4_pml,
+fitmea_model_sr4_pml <- fitmeasures(fit_model_sr4_pml,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
 
 ```
@@ -428,15 +432,15 @@ puberty =~ dhea + estr + test
 
 "
 
-# Fit HM1 - can only get MLR to converge:
+# Fit HM1 - can only get MLR to converge (? check this):
 
 fit_hm1 <- cfa(hm1, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") #even with MLR, some estimated lv variances are negative
 
-#fit_hm1 <- cfa(hm1, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") #the optimizer warns that a solution has NOT been found!
+fit_hm1_pml <- cfa(hm1, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") #the optimizer warns that a solution has NOT been found!
 
 # Summary Stats for HM1
-summary(fit_hm1, fit.measures = T, standardized = T)
-fitMeasures(fit_hm1,
+sum_hm1_pml <- summary(fit_hm1_pml, fit.measures = T, standardized = T)
+fitmea_hm1_pml <- fitMeasures(fit_hm1_pml,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 
 # Pictoral Representation of HM1
@@ -706,7 +710,6 @@ estr_hair ~~ test_hair
 "
 
 # Fit HM4v2:
-
 fit_hm4v2 <- cfa(hm4v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
 fit_hm4v2_pml <- cfa(hm4v2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
 
@@ -1169,8 +1172,146 @@ anova(fit_fm4_pml, fit_fm3_pml) # spits out stupid numbers
 
 
 ```{r Bio predicts Self-Report SEM}
-# Define SEM Model 1 - Does Salivary A & G predict Self-Reported A & G?
+# Define SEM Model 1 - Does hormone (saliva + hair) PUB predict Self-Reported PUB?
 sem1 <- "
+#Latent Variables
+
+#Saliva
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Hormones (Saliva + Hair) - Level 2
+dhea =~ sal_dhea + dhea_hair
+estr =~ sal_estr + estr_hair
+test =~ sal_test + test_hair
+
+#Bio Puberty
+bio_puberty =~ dhea + estr + test
+
+#Self-Report Puberty
+sr_puberty =~ PDS2 + PDS3 + PDS1 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#Regressions
+sr_puberty ~ bio_puberty
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#Covariances for Hair 
+dhea_hair ~~ estr_hair + test_hair
+estr_hair ~~ test_hair
+"
+
+# Define SEM Model 2 - Does hormone (saliva + hair) ADR and GON predict Self-Reported ADR and GON?
+sem2 <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Hormones (Saliva + Hair) - Level 2
+dhea =~ sal_dhea + dhea_hair
+estr =~ sal_estr + estr_hair 
+test =~ sal_test + test_hair
+
+#bio Adrenal
+bio_adrenal =~ dhea + test
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Regressions
+adrenal_sr ~ bio_adrenal
+gonadal_sr ~ estr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#Covariances for Hair 
+dhea_hair ~~ estr_hair + test_hair
+estr_hair ~~ test_hair
+"
+
+# Fit SEM 1
+fit_sem1_pml <- cfa(sem1, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS2","PDS3","PDS1","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+# Summary Stats for SEM 1
+sum_sem1_pml <- summary(fit_sem1_pml, fit.measures = T, standardized = T)
+fitmea_sem1_pml <- fitmeasures(fit_sem1_pml,
+            fit.measures = c("cfi","ecvi","mfi","pvalue"))
+
+# Pictoral Representation of SEM 1
+semPaths(fit_sem1_pml)
+
+# Fit SEM 2
+fit_sem2_pml <- cfa(sem2, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS2","PDS3","PDS1","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+# Summary Stats for SEM 2
+sum_sem2_pml <- summary(fit_sem2_pml, fit.measures = T, standardized = T)
+fitmea_sem2_pml <- fitmeasures(fit_sem2_pml,
+            fit.measures = c("cfi","ecvi","mfi","pvalue"))
+
+# Pictoral Representation of SEM 2
+semPaths(fit_sem2_pml)
+
+#Comparing Model Fits
+anova(fit_sem1_pml, fit_sem2_pml) # this tells me stupid stuff
+
+# Define SEM Model 3 - Does Salivary (without hair) PUB predict Self-Reported PUB?
+sem3 <- "
+#Latent Variables
+
+#Saliva
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Bio Puberty
+bio_puberty =~ sal_dhea + sal_estr + sal_test
+
+#Self-Report Puberty
+sr_puberty =~ PDS2 + PDS3 + PDS1 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#Regressions
+sr_puberty ~ bio_puberty
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+"
+
+# Define SEM Model 4 - Does Salivary (without hair) ADR and GON predict Self-Reported ADR and GON?
+sem4 <- "
 #Latent Variables
 
 #Saliva - Level 1
@@ -1200,64 +1341,38 @@ dhea4 ~~ estr4 + test4
 estr4 ~~ test4
 "
 
-# Define SEM Model 2 - Does Salivary Puberty predict Self-Reported Puberty?
-sem2 <- "
-#Latent Variables
 
-#Saliva
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Bio Puberty
-bio_puberty =~ sal_dhea + sal_estr + sal_test
-
-#Self-Report Puberty
-sr_puberty =~ PDS2 + PDS3 + PDS1 + PDS4 + PDS6 + PBIP1 + PBIP2
-
-#Regressions
-sr_puberty ~ bio_puberty
-
-#Covariances for Saliva Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-"
-
-# Fit SEM Model 1
-fit_sem1_pml <- cfa(sem1, data = data, estimator = "PML", 
+# Fit SEM 3
+fit_sem3_pml <- cfa(sem3, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS2","PDS3","PDS1","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
-# Pictoral Representation of SEM Model 1
-semPaths(fit_sem1_pml)
-
-# Summary Stats for SEM Model 1
-sum_sem1_pml <- summary(fit_sem1_pml, fit.measures = T, standardized = T)
-fitmea_sem1_pml <- fitmeasures(fit_sem1_pml,
+# Summary Stats for SEM 3
+sum_sem3_pml <- summary(fit_sem3_pml, fit.measures = T, standardized = T)
+fitmea_sem3_pml <- fitmeasures(fit_sem3_pml,
             fit.measures = c("cfi","ecvi","mfi","pvalue"))
 
-# Fit SEM Model 2
-fit_sem2_pml <- cfa(sem2, data = data, estimator = "PML", 
+# Pictoral Representation of SEM  3
+semPaths(fit_sem3_pml)
+
+# Fit SEM 4
+fit_sem4_pml <- cfa(sem4, data = data, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS2","PDS3","PDS1","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
-# Summary Stats for SEM Model 2
-sum_sem2_pml <- summary(fit_sem2_pml, fit.measures = T, standardized = T)
-fitmea_sem2_pml <- fitmeasures(fit_sem2_pml,
+# Summary Stats for SEM 4
+sum_sem4_pml <- summary(fit_sem4_pml, fit.measures = T, standardized = T)
+fitmea_sem4_pml <- fitmeasures(fit_sem4_pml,
             fit.measures = c("cfi","ecvi","mfi","pvalue"))
 
-semPaths(fit_sem2_pml)
+# Pictoral Representation of SEM  4
+semPaths(fit_sem4_pml)
 
 #Comparing Model Fits
-anova(fit_sem1_pml, fit_sem2_pml)
+anova(fit_sem3_pml, fit_sem4_pml)
+
 ```
 
 ```{r}
