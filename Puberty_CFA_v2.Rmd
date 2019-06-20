@@ -9,7 +9,7 @@ output: html_document
 ```{r Set Directory, message=FALSE, warning=FALSE, include=FALSE}
 getwd()
 #You should set this to the behavioral directory on the TAG file server 
-workdir='Z:/dsnlab/TAG/behavior/' 
+workdir='I:/dsnlab/TAG/behavior/' 
 ```
 
 ## Loading Libraries
@@ -559,10 +559,7 @@ puberty =~ sal_dhea + sal_estr + sal_test + dhea_hair + estr_hair + test_hair
 "
 
 # Fit HM1v2:
-
-fit_hm1v2 <- cfa(hm1v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
-
-fit_hm1v2_pml <- cfa(hm1v2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+fit_hm1v2_pml <- cfa(hm1v2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
 
 # Summary Stats for HM1
 #summary(fit_hm1v2, fit.measures = T, standardized = T)
@@ -570,7 +567,8 @@ fit_hm1v2_pml <- cfa(hm1v2, data = hormones, missing = "available.cases", estima
 #            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 summary(fit_hm1v2_pml, fit.measures = T, standardized = T)
 fitmea_hm1v2_pml <- fitMeasures(fit_hm1v2_pml,
-                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+                                fit.measures = c("cfi","ecvi","mfi", 
+                                                 "chisq", "pvalue", "rmsea", "srmr"))
 
 # Pictoral Representation of HM1
 # semPaths(fit_hm1v2)
@@ -590,7 +588,7 @@ gonadal =~ sal_estr + estr_hair
 
 # Fit HM2v2:
 # fit_hm2v2 <- cfa(hm2v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
-fit_hm2v2_pml <- cfa(hm2v2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+fit_hm2v2_pml <- cfa(hm2v2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
 
 # Summary Stats for HM2v2
 # summary(fit_hm2v2, fit.measures = T, standardized = T)
@@ -598,7 +596,7 @@ fit_hm2v2_pml <- cfa(hm2v2, data = hormones, missing = "available.cases", estima
 summary(fit_hm2v2_pml, fit.measures = T, standardized = T)
 fitmea_hm2v2_pml <- fitMeasures(fit_hm2v2_pml, 
                                 fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
-                                                 "rmsea"))
+                                                 "rmsea", "srmr"))
 
 # Pictoral Representation of HM2v2
 #semPaths(fit_hm2v2)
@@ -631,14 +629,15 @@ estr_hair ~~ test_hair
 
 # Fit HM3v2
 # fit_hm3v2 <- cfa(hm3v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
-fit_hm3v2_pml <- cfa(hm3v2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr")
+fit_hm3v2_pml <- cfa(hm3v2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr")
 
 # Summary Stats for HM3
 # summary(fit_hm3v2, fit.measures = T, standardized = T)
 # fitMeasures(fit_hm3v2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 summary(fit_hm3v2_pml, fit.measures = T, standardized = T)
 fitmea_hm3v2_pml <- fitMeasures(fit_hm3v2_pml,
-                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", 
+                                                 "pvalue", "rmsea", "srmr"))
 
 # Pictoral Representation of HM3v2
 # semPaths(fit_hm3v2)
@@ -672,7 +671,7 @@ estr_hair ~~ test_hair
 
 # Fit HM4v2:
 # fit_hm4v2 <- cfa(hm4v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
-fit_hm4v2_pml <- cfa(hm4v2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+fit_hm4v2_pml <- cfa(hm4v2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
 
 # Summary Stats for HM4v2
 # summary(fit_hm4v2, fit.measures = T, standardized = T)
@@ -680,18 +679,18 @@ fit_hm4v2_pml <- cfa(hm4v2, data = hormones, missing = "available.cases", estima
 summary(fit_hm4v2_pml, fit.measures = T, standardized = T)
 fitmea_hm4v2_pml <- fitMeasures(fit_hm4v2_pml, 
                                 fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
-                                                 "rmsea"))
+                                                 "rmsea", "srmr"))
 
 # Pictoral Representation of HM4
 # semPaths(fit_hm4v2)
 semPaths(fit_hm4v2_pml)
 
 #Compare models
-lavTestLRT(fit_hm1v2_pml, fit_hm3v2_pml) # 1 factor with or w/o covar?
-lavTestLRT(fit_hm2v2_pml, fit_hm4v2_pml) # 2 factor with or w/o covar?
+lavTestLRT(fit_hm1v2_pml, fit_hm3v2_pml) # 1 factor with or w/o covar? p=0.07913
+lavTestLRT(fit_hm2v2_pml, fit_hm4v2_pml) # 2 factor with or w/o covar? p=0.3381
 
-lavTestLRT(fit_hm1v2_pml, fit_hm2v2_pml) # 1 or 2 factor w/o covar?
-lavTestLRT(fit_hm3v2_pml, fit_hm4v2_pml) # 1 or 2 factor with covar?
+lavTestLRT(fit_hm1v2_pml, fit_hm2v2_pml) # 1 or 2 factor w/o covar? p=0.3786
+lavTestLRT(fit_hm3v2_pml, fit_hm4v2_pml) # 1 or 2 factor with covar? p=0.3625
 
 ```
 
@@ -851,10 +850,11 @@ estr4 ~~ test4
 
 #Methods Factors
 hair =~ dhea_hair + estr_hair + test_hair
-saliva =~ sal_dhea + sal_estr + sal_test
+saliva =~ dhea1 + dhea2 + dhea3 + dhea4 + estr1 + estr2 + estr3 + estr4 + test1 + test2 + test3 + test4
 
 #Set Latent Var Covariances to Zero
-hair ~~ 0*saliva
+hair ~~ 0*saliva + 0*sal_dhea + 0*sal_estr + 0*sal_test
+saliva ~~ 0*sal_dhea + 0*sal_estr + 0*sal_test
 "
 
 # Define HSM2 - No methods factors
@@ -882,31 +882,32 @@ estr4 ~~ test4
 
 # Fit HSM1 All Data
 # fit_hsm1 <- cfa(hsm1, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
-fit_hsm1_pml <- cfa(hsm1, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr")
+fit_hsm1_pml <- cfa(hsm1, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr")
 
 # Summary Stats for HSM1
 # summary(fit_hsm1, fit.measures = T, standardized = T) 
 # fitMeasures(fit_hsm1, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 summary(fit_hsm1_pml, fit.measures = T, standardized = T) 
-fitmea_hsm1_pml <- fitMeasures(fit_hsm1_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+fitmea_hsm1_pml <- fitMeasures(fit_hsm1_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
+
+semPaths(fit_hsm1_pml)
 
 # Fit Model HSM2
 # fit_hsm2 <- cfa(hsm2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
-fit_hsm2_pml <- cfa(hsm2, data = hormones, missing = "available.cases", estimator = "PML", se = "robust.mlr")
+fit_hsm2_pml <- cfa(hsm2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr")
 
 # Summary Stats for HSM2
 # summary(fit_hsm2, fit.measures = T, standardized = T) 
 # fitMeasures(fit_hsm2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-sum_hsm2_pml <- summary(fit_hsm2_pml, fit.measures = T, standardized = T) 
-fitmea_hsm2_pml <- fitMeasures(fit_hsm2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+summary(fit_hsm2_pml, fit.measures = T, standardized = T) 
+fitmea_hsm2_pml <- fitMeasures(fit_hsm2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
 
 # Pictoral Representation of HSMs
 semPaths(fit_hsm1_pml)
 semPaths(fit_hsm2_pml)
 
 # Comparing Model Fits - wait these don't work
-#anova(fit_hsm1, fit_hsm2)
-#lrtest(fit_hsm1, fit_hsm2)
+lavTestLRT(fit_hsm1_pml, fit_hsm2_pml)
 
 ```
 
