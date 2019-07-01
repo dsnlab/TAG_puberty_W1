@@ -1549,45 +1549,32 @@ anova(fit_sem1v2_pml, fit_sem2v2_pml)
 
 ```{r}
 #Extracting Latent Variable Estimates per Subject
-sem1_extract_vars <- lavPredict(fit_sem1_pml)
-sem2_extract_vars <- lavPredict(fit_sem2_pml)
-sem3_extract_vars <- lavPredict(fit_sem3_pml)
-sem4_extract_vars <- lavPredict(fit_sem4_pml)
+sem1_extract_vars <- lavPredict(fit_sem1v2_pml)
+sem2_extract_vars <- lavPredict(fit_sem2v2_pml)
 
 #Correlation Matrices for Latent Var Estimates
 sem1_cor <- cor(sem1_extract_vars)
+sem1_p_bio_sr_r2 <- (sem1_cor[5,4])*(sem1_cor[5,4])
 sem2_cor <- cor(sem2_extract_vars)
-sem3_cor <- cor(sem3_extract_vars)
-sem4_cor <- cor(sem4_extract_vars)
+sem2_a_bio_sr_r2 <- (sem2_cor[6,5])*(sem2_cor[6,5])
+sem2_g_bio_sr_r2 <- (sem2_cor[7,4])*(sem2_cor[7,4])
 
 # "P" bio with hair predict "P" self-report
-sem1_p_plot <- plot(sem1_extract_vars[,"sr_puberty"] ~ sem1_extract_vars[,"bio_puberty"], ylab = "Extracted Latent Variable Estimate for Self-Reported Puberty", xlab = "Extracted Latent Variable Estimate for Hormone Puberty (Saliva + Hair)") + title(main = "Latent Biological Puberty (Hormones)\n predicts Latent Self-Reported Puberty") + abline(lm(sem1_extract_vars[,"sr_puberty"] ~ sem1_extract_vars[,"bio_puberty"])) + 
-  text(x=1.75, y=1.75, labels = bquote(italic(R)^2 == .(format(0.4034))))
+sem1_p_plot <- plot(sem1_extract_vars[,"sr_puberty"] ~ sem1_extract_vars[,"bio_puberty"], ylab = "Estimates for Self-Reported Puberty", xlab = "Estimates for Hormone Puberty") + title(main = "Extracted Latent Variables:\n One-factor Puberty") + abline(lm(sem1_extract_vars[,"sr_puberty"] ~ sem1_extract_vars[,"bio_puberty"])) + 
+  text(x=1.4, y=-1.2, labels = bquote(italic(R)^2 == .(format(sem1_p_bio_sr_r2))))
 
 # "A" bio with hair predict "A" self-report 
-sem2_a_plot <- plot(sem2_extract_vars[,"adrenal_sr"] ~ sem2_extract_vars[,"bio_adrenal"], ylab = "Extracted Latent Variable Estimate\n for Self-Reported Adrenarche", xlab = "Extracted Latent Variable Estimate\n for Hormone Adrenarche (Saliva + Hair)") + title(main = "Latent Biological Adrenarche\n (DHEA & T)\n predicts Latent Self-Reported Adrenarche") + abline(lm(sem2_extract_vars[,"adrenal_sr"] ~ sem2_extract_vars[,"bio_adrenal"])) + 
-  text(x=1.75, y=1.75, labels = bquote(italic(R)^2 == .(format(0.3697))))
+sem2_a_plot <- plot(sem2_extract_vars[,"adrenal_sr"] ~ sem2_extract_vars[,"bio_adrenal"], ylab = "Estimates for Self-Reported Adrenarche", xlab = "Estimates for Hormone Adrenarche") + title(main = "Extracted Latent Variables:\n Two-factor Adrenarche") + abline(lm(sem2_extract_vars[,"adrenal_sr"] ~ sem2_extract_vars[,"bio_adrenal"])) + 
+  text(x=1.45, y=-1.25, labels = bquote(italic(R)^2 == .(format(sem2_a_bio_sr_r2))))
 
 # "G" bio with hair predict "G" self-report 
-sem2_g_plot <- plot(sem2_extract_vars[,"gonadal_sr"] ~ sem2_extract_vars[,"estr"], ylab = "Extracted Latent Variable Estimate\n for Self-Reported Gonadarche", xlab = "Extracted Latent Variable Estimate\n for Hormone Gonadarche (Saliva + Hair)") + title(main = "Latent Biological Gonadarche\n (E2)\n predicts Latent Self-Reported Gonadarche") + abline(lm(sem2_extract_vars[,"gonadal_sr"] ~ sem2_extract_vars[,"estr"])) + 
-  text(x=0.2, y=1, labels = bquote(italic(R)^2 == .(format(0.3926))))
-
-# "P" bio only saliva predict "P" self-report 
-sem3_p_plot <- plot(sem3_extract_vars[,"sr_puberty"] ~ sem3_extract_vars[,"bio_puberty"], ylab = "Extracted Latent Variable Estimate for Self-Reported Puberty", xlab = "Extracted Latent Variable Estimate for Salivary Puberty") + title(main = "Latent Biological Puberty (Salivary Hormones)\n predicts Latent Self-Reported Puberty") + abline(lm(sem3_extract_vars[,"sr_puberty"] ~ sem3_extract_vars[,"bio_puberty"])) + 
-  text(x=1.75, y=1.75, labels = bquote(italic(R)^2 == .(format(0.4034))))
-
-# "A" bio predict "A" self-report without hair
-sem4_a_plot <- plot(sem4_extract_vars[,"adrenal_sr"] ~ sem4_extract_vars[,"sal_adrenal"], ylab = "Extracted Latent Variable Estimate\n for Self-Reported Adrenarche", xlab = "Extracted Latent Variable Estimate\n for Salivary Adrenarche") + title(main = "Latent Biological Adrenarche\n (Salivary DHEA & T)\n predicts Latent Self-Reported Adrenarche") + abline(lm(sem4_extract_vars[,"adrenal_sr"] ~ sem4_extract_vars[,"sal_adrenal"])) + 
-  text(x=1.75, y=1.75, labels = bquote(italic(R)^2 == .(format(0.3697))))
-
-# "G" bio predict "G" self-report without hair
-sem4_g_plot <- plot(sem4_extract_vars[,"gonadal_sr"] ~ sem4_extract_vars[,"sal_gonadal"], ylab = "Extracted Latent Variable Estimate\n for Self-Reported Gonadarche", xlab = "Extracted Latent Variable Estimate\n for Salivary Gonadarche") + title(main = "Latent Biological Gonadal Development\n (Salivary E2)\n predicts Latent Self-Reported Gonadarche") + abline(lm(sem4_extract_vars[,"gonadal_sr"] ~ sem4_extract_vars[,"sal_gonadal"])) + 
-  text(x=0.2, y=1, labels = bquote(italic(R)^2 == .(format(0.3926))))
+sem2_g_plot <- plot(sem2_extract_vars[,"gonadal_sr"] ~ sem2_extract_vars[,"bio_gonadal"], ylab = "Estimates for Self-Reported Gonadarche", xlab = "Estimates for Hormone Gonadarche") + title(main = "Extracted Latent Variables:\n Two-factor Gonadarche") + abline(lm(sem2_extract_vars[,"gonadal_sr"] ~ sem2_extract_vars[,"bio_gonadal"])) + 
+  text(x=0.1, y=-0.8, labels = bquote(italic(R)^2 == .(format(sem2_g_bio_sr_r2))))
 
 ```
-```{r save and export}
-# Model structures
 
+
+```{r save and export}
 # Fit measures
 fitmea_sr <- data.frame(fitmea_sr1_pml, fitmea_sr2_pml, fitmea_sr3_pml,
                          fitmea_sr4_pml)
