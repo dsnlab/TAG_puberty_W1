@@ -28,7 +28,7 @@ library(nlsem)
 
 ## Load and Clean Data
 ```{r Load and Clean Data}
-# Load Data
+# Load Data. NOTE: The "PBIP" variables are not actually from the Picture Based Interview of Puberty (PBIP) but the Udry & Morris Line drawings, reported as LD1 and LD2 in the manuscript.
 saliva <- read.csv(file.path(workdir,"Puberty/Saliva/Wave1/TAG_W1_Saliva_wide_cens_only4.csv", fsep=""))
 hair <- read.csv(file.path(workdir,"Puberty/Hair/Wave1/TAG_W1_Hair_processed.csv", fsep=""))
 qs <- read.csv(file.path(workdir,"Questionnaires/Puberty/Composite/TAG_W1_PubertyComposite.csv", fsep=""))
@@ -136,12 +136,11 @@ data_mpbip[, 21:23] <- lapply(data_mpbip[, 21:23], ordered)
 ```{r SRMs}
 
 # Define SRM1 - Self-Report Only with 1 Puberty Factor. No covariances
-
 sr1 <- "
 #Latent Neuroendocrine Systems
 puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 "
-# Define SRM3 - Self-Report Only with 1 Puberty Factor. WITH covariances. No covar on PDS6
+# Define SRM3 - Self-Report Only with 1 Puberty Factor. WITH covariances. No covar on PDS6 bc it's binary
 sr3 <- "
 #Latent Neuroendocrine Systems
 puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
@@ -153,29 +152,23 @@ PDS3 ~~ PDS4
 PBIP1 ~~ PBIP2
 "
 
-#Other stuff not using for now
-#model_sr1_noPDS1 <- "
-##Latent Neuroendocrine Systems
-#puberty =~ PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+#Because PDS1 has the worst loading, make models without that indicator
+sr1_noPDS1 <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+"
 
-##Covariances for questionnaires
-#PDS2 ~~ PDS3 + PDS4
-#PDS3 ~~ PDS4
-#PBIP1 ~~ PBIP2
-#"
+sr3_noPDS1 <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 
-#model_sr1_noPDS1_nocov <- "
-##Latent Neuroendocrine Systems
-#puberty =~ PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
-#"
-
-#model_sr1_nocov_noPBIP <- "
-##Latent Neuroendocrine Systems
-#puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6
-#"
+#Covariances for questionnaires
+PDS2 ~~ PDS3 + PDS4
+PDS3 ~~ PDS4
+PBIP1 ~~ PBIP2
+"
 
 # Define SRM2 - Self-Report Only with 2 Puberty Factors (Adrenal & Gonadal). No covariances.
-
 sr2 <- "
 #Latent Neuroendocrine Systems
 adrenal =~ PDS2 + PDS3 + PBIP2
@@ -195,31 +188,23 @@ PDS3 ~~ PDS4
 PBIP1 ~~ PBIP2
 "
 
-#Other stuff not using for now
-#model_sr2_noPDS1 <- "
-##Latent Neuroendocrine Systems
-#adrenal =~ PDS2 + PDS3 + PBIP2
-#gonadal =~ PDS4 + PDS6 + PBIP1
+#2 factors SRMs without PDS1 again
+sr2_noPDS1 <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3 + PBIP2
+gonadal =~ PDS4 + PDS6 + PBIP1
+"
 
-##Covariances for questionnaires
-#PDS2 ~~ PDS3 + PDS4
-#PDS3 ~~ PDS4
-#PBIP1 ~~ PBIP2
-#"
+sr4_noPDS1 <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3 + PBIP2
+gonadal =~ PDS4 + PDS6 + PBIP1
 
-#model_sr2_noPDS1_nocov <- "
-##Latent Neuroendocrine Systems
-#adrenal =~ PDS2 + PDS3 + PBIP2
-#gonadal =~ PDS4 + PDS6 + PBIP1
-#"
-
-#model_sr2_nocov_noPBIP <- "
-##Latent Neuroendocrine Systems
-#adrenal =~ PDS2 + PDS3
-#gonadal =~ PDS1 + PDS4 + PDS6
-#"
-
-
+#Covariances for questionnaires
+PDS2 ~~ PDS3 + PDS4
+PDS3 ~~ PDS4
+PBIP1 ~~ PBIP2
+"
 
 # ** Fit Self-Report CFAs (ordinal data) - PML - USE THIS **
 fit_sr1_pml <- cfa(sr1, data = data, estimator = "PML", 
@@ -242,117 +227,36 @@ fit_sr4_pml <- cfa(sr4, data = data, estimator = "PML",
                      ordered = c("PDS1","PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
-#fit_model_sr1_pml_noPDS1 <- cfa(model_sr1_noPDS1, data = data, estimator = "PML",
-#                      missing = "available.cases", verbose = T,  
-#                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-#                                 "PDS6","PBIP1","PBIP2"))
-#fit_model_sr1_pml_noPDS1_nocov <- cfa(model_sr1_noPDS1_nocov, data = data, 
-#                                      estimator = "PML",
-#                      missing = "available.cases", verbose = T,  
-#                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-#                                 "PDS6","PBIP1","PBIP2"))
-#
-#fit_model_sr1_pml_nocov_noPBIP <- cfa(model_sr1_nocov_noPBIP, data = data, estimator = "PML", 
-#                      missing = "available.cases", verbose = T,  
-#                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-#                                 "PDS6"))
-#
-#fit_model_sr2_pml_noPDS1 <- cfa(model_sr2_noPDS1, data = data, estimator = "PML", 
-#                      missing = "available.cases", verbose = T,  
-#                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-#                                 "PDS6","PBIP1","PBIP2")
-#
-#fit_model_sr2_pml_noPDS1_nocov <- cfa(model_sr2_noPDS1_nocov, data = data, 
-#                                      estimator = "PML", 
-#                      missing = "available.cases", verbose = T,  
-#                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-#                                 "PDS6","PBIP1","PBIP2"))
-#fit_model_sr2_pml_nocov_noPBIP <- cfa(model_sr2_nocov_noPBIP, data = data, estimator = "PML", 
-#                      missing = "available.cases", verbose = T,  
-#                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-#                                 "PDS6")) # Note this comes up with the dread pirate NOT POSITIVE DEFINITE
+# No PDS1
+fit_sr1_noPDS1_pml <- cfa(sr1_noPDS1, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
 
-# Fit Self-Report CFAs (continuous data)
-#fit_model_sr1_cont <- cfa(model_sr1, data = data, 
-#                     missing = "pairwise",
-#                     verbose = T)
-#fit_model_sr1_cont_nocov <- cfa(model_sr1_nocov, data = data, 
-#                     missing = "pairwise",
-#                     verbose = T)
-#fit_model_sr1_cont_noPDS1 <- cfa(model_sr1_noPDS1, data = data, 
-#                     missing = "pairwise",
-#                     verbose = T)
-#fit_model_sr1_cont_noPDS1_nocov <- cfa(model_sr1_noPDS1_nocov, data = data, 
-#                     missing = "pairwise",
-#                     verbose = T)
-#
-#fit_model_sr2_cont <- cfa(model_sr2, data = data, 
-#                        missing = "pairwise",
-#                        verbose = T)
-#fit_model_sr2_cont_nocov <- cfa(model_sr2_nocov, data = data, 
-#                        missing = "pairwise",
-#                        verbose = T)
-#fit_model_sr2_cont_noPDS1 <- cfa(model_sr2_noPDS1, data = data, 
-#                     missing = "pairwise",
-#                     verbose = T)
-#fit_model_sr2_cont_noPDS1_nocov <- cfa(model_sr2_noPDS1_nocov, data = data, 
-#                     missing = "pairwise",
-#                     verbose = T)
+fit_sr2_noPDS1_pml <- cfa(sr2_noPDS1, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
 
+fit_sr3_noPDS1_pml <- cfa(sr3_noPDS1, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+fit_sr4_noPDS1_pml <- cfa(sr4, data = data, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
 
 # Model Stats & Comparison 
 
 #Do we need covariances between items of the same questionnaire?
-
-#anova(fit_model_sr1_ord, fit_model_sr1_ord_nocov)
-#anova(fit_model_sr1_ord_noPDS1, fit_model_sr1_ord_noPDS1_nocov)
 anova(fit_sr3_pml, fit_sr1_pml) # 1 factor models
-#anova(fit_model_sr1_pml_noPDS1, fit_model_sr1_pml_noPDS1_nocov)
-#anova(fit_model_sr2_ord, fit_model_sr2_ord_nocov)
-#anova(fit_model_sr2_ord_noPDS1, fit_model_sr2_ord_noPDS1_nocov)
 anova(fit_sr4_pml, fit_sr2_pml) # 2 factor models
-#anova(fit_model_sr2_pml_noPDS1, fit_model_sr2_pml_noPDS1_nocov)
 #For all models, adding covariances for self-report Qs does not increase model fit indices.
 
 
-#Should we include PDS1?
-#fitmeasures(fit_model_sr1_ord_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#summary(fit_model_sr1_ord_nocov, fit.measures = T, standardized = T)
-#fitmeasures(fit_model_sr1_ord_noPDS1_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#fitmeasures(fit_model_sr1_pml_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#fitmeasures(fit_model_sr1_pml_noPDS1_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#model with PDS1 is slightly better for most fit indices in AG models
-#fitmeasures(fit_model_sr2_ord_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#summary(fit_model_sr2_ord_nocov, fit.measures = T, standardized = T)
-#
-#fitmeasures(fit_model_sr2_ord_noPDS1_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#fitmeasures(fit_model_sr2_pml_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#fitmeasures(fit_model_sr2_pml_noPDS1_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#model with PDS1 is slightly better for most fit indices in P models
-#leaving PDS1 in the model from this point forward
-
-
 #Is self-reported puberty better captured by A+G or P? 
-
-#WLSMV - don't use
-#summary(fit_model_sr1_ord_nocov, fit.measures = T, standardized = T)
-#summary(fit_model_sr2_ord_nocov, fit.measures = T, standardized = T)
-#anova(fit_model_sr1_ord_nocov, fit_model_sr2_ord_nocov)
-#lavTestLRT(fit_model_sr1_ord_nocov, fit_model_sr2_ord_nocov)
-#fitmeasures(fit_model_sr1_ord_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#fitmeasures(fit_model_sr2_ord_nocov,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
-#AG fits better than P for model with NO covariances between items of the same questionnaire,
-#data treated as ordinal, and wlsmv estimator (p<0.05)
 
 # One vs 2 factor for models - NO covariances
 summary(fit_sr1_pml, fit.measures = T, standardized = T)
@@ -364,7 +268,7 @@ fitmea_sr1_pml <- fitmeasures(fit_sr1_pml,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
 fitmea_sr2_pml <- fitmeasures(fit_sr2_pml,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
-#AG fits better than P for model with NO covariances between items of the same questionnaire,
+#AG fits better than P for model with NO covariances between items of the same questionnaire
 #data treated as ordinal, and pml estimator (p=0.09)
 
 # One vs 2 factor for models - WITH covariances
@@ -378,6 +282,17 @@ fitmea_sr3_pml <- fitmeasures(fit_sr3_pml,
 fitmea_sr4_pml <- fitmeasures(fit_sr4_pml,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
 
+
+# Check 1 vs 2 factor when PDS1 is not included
+summary(fit_sr1_noPDS1_pml, fit.measures = T, standardized = T)
+summary(fit_sr2_noPDS1_pml, fit.measures = T, standardized = T)
+lavTestLRT(fit_sr1_noPDS1_pml, fit_sr2_noPDS1_pml)
+
+fitmea_sr1_noPDS1_pml <- fitmeasures(fit_sr1_noPDS1_pml,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
+fitmea_sr2_noPDS1_pml <- fitmeasures(fit_sr2_noPDS1_pml,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
+# There is no significant difference between a 1 and 2 factor model even when PDS1 is not included. Model fit indices are also not better when PDS1 is removed, so PDS1 remains in the models from now on.
 ```
 
 
@@ -385,7 +300,7 @@ fitmea_sr4_pml <- fitmeasures(fit_sr4_pml,
 ```{r HMs}
 ##########
 
-# First we run all four models WITH BOTH latent hormone (DHEA, T, E2) and neuroendocrine (ADR, GON, PUB) variables. Even though the one- and two-factor models are equivalent
+# First we run all four models WITH BOTH latent hormone (DHEA, T, E2) and neuroendocrine (ADR, GON, PUB) factors. Even though the one- and two-factor models are equivalent
 
 ##########
 
@@ -549,7 +464,7 @@ lavTestLRT(fit_hm2_pml, fit_hm4_pml)
 
 ##########
 
-# Second, because no HMs above worked whatsoever, we run all four models without the latent hormone (DHEA, T, E2) variables and everything loads directly onto neuroendocrine (ADR, GON, PUB) variables. These are HMv2 (hormone models version 2). Currently this is what's reported.
+# Second, because no HMs above worked whatsoever, we run all four models without the latent hormone (DHEA, T, E2) variables and everything loads directly onto neuroendocrine (ADR, GON, PUB) factors. These are HMv2 (hormone models version 2). Currently this is what's reported in the manuscript. I've run these both with PML and MLR estimators below but MLR is more appropriate because all the hormone models have continuous indicators, and this is what we reported in the final version.
 
 ##########
 
@@ -567,13 +482,17 @@ puberty =~ sal_dhea + sal_estr + sal_test + dhea_hair + estr_hair + test_hair
 
 # Fit HM1v2:
 fit_hm1v2_pml <- cfa(hm1v2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+fit_hm1v2_mlr <- cfa(hm1v2, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr") 
 
-# Summary Stats for HM1
-#summary(fit_hm1v2, fit.measures = T, standardized = T)
-#fitMeasures(fit_hm1v2,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+# Summary Stats for HM1v2
+
 summary(fit_hm1v2_pml, fit.measures = T, standardized = T)
 fitmea_hm1v2_pml <- fitMeasures(fit_hm1v2_pml,
+                                fit.measures = c("cfi","ecvi","mfi", 
+                                                 "chisq", "pvalue", "rmsea", "srmr"))
+
+summary(fit_hm1v2_mlr, fit.measures = T, standardized = T)
+fitmea_hm1v2_mlr <- fitMeasures(fit_hm1v2_mlr,
                                 fit.measures = c("cfi","ecvi","mfi", 
                                                  "chisq", "pvalue", "rmsea", "srmr"))
 
@@ -581,7 +500,7 @@ fitmea_hm1v2_pml <- fitMeasures(fit_hm1v2_pml,
 # semPaths(fit_hm1v2)
 semPaths(fit_hm1v2_pml)
 
-# Define HM2 - two factors, no covariances, hair + saliva
+# Define HM2v2 - two factors, no covariances, hair + saliva
 hm2v2 <- "
 #Latent Saliva Variables
 sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
@@ -594,8 +513,10 @@ gonadal =~ sal_estr + estr_hair
 "
 
 # Fit HM2v2:
-# fit_hm2v2 <- cfa(hm2v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
+
 fit_hm2v2_pml <- cfa(hm2v2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+
+fit_hm2v2_mlr <- cfa(hm2v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
 
 # Summary Stats for HM2v2
 # summary(fit_hm2v2, fit.measures = T, standardized = T)
@@ -604,10 +525,15 @@ summary(fit_hm2v2_pml, fit.measures = T, standardized = T)
 fitmea_hm2v2_pml <- fitMeasures(fit_hm2v2_pml, 
                                 fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
                                                  "rmsea", "srmr"))
+summary(fit_hm2v2_mlr, fit.measures = T, standardized = T)
+fitmea_hm2v2_mlr <- fitMeasures(fit_hm2v2_mlr, 
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                 "rmsea", "srmr"))
 
 # Pictoral Representation of HM2v2
 #semPaths(fit_hm2v2)
 semPaths(fit_hm2v2_pml)
+semPaths(fit_hm2v2_mlr)
 
 # Define HM3v2 - one factor, WITH covariances, hair + saliva
 hm3v2 <- "
@@ -635,14 +561,20 @@ estr_hair ~~ test_hair
 "
 
 # Fit HM3v2
-# fit_hm3v2 <- cfa(hm3v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr")
+
 fit_hm3v2_pml <- cfa(hm3v2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr")
 
+fit_hm3v2_mlr <- cfa(hm3v2, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr")
+
 # Summary Stats for HM3
-# summary(fit_hm3v2, fit.measures = T, standardized = T)
-# fitMeasures(fit_hm3v2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
+
 summary(fit_hm3v2_pml, fit.measures = T, standardized = T)
 fitmea_hm3v2_pml <- fitMeasures(fit_hm3v2_pml,
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", 
+                                                 "pvalue", "rmsea", "srmr"))
+
+summary(fit_hm3v2_mlr, fit.measures = T, standardized = T)
+fitmea_hm3v2_mlr <- fitMeasures(fit_hm3v2_mlr,
                                 fit.measures = c("cfi","ecvi","mfi", "chisq", 
                                                  "pvalue", "rmsea", "srmr"))
 
@@ -677,14 +609,17 @@ estr_hair ~~ test_hair
 "
 
 # Fit HM4v2:
-# fit_hm4v2 <- cfa(hm4v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
 fit_hm4v2_pml <- cfa(hm4v2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
 
+fit_hm4v2_mlr <- cfa(hm4v2, data = hormones, missing = "ML", estimator = "MLR", se = "robust.mlr") 
+
 # Summary Stats for HM4v2
-# summary(fit_hm4v2, fit.measures = T, standardized = T)
-# fitMeasures(fit_hm4v2, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea"))
 summary(fit_hm4v2_pml, fit.measures = T, standardized = T)
 fitmea_hm4v2_pml <- fitMeasures(fit_hm4v2_pml, 
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                 "rmsea", "srmr"))
+summary(fit_hm4v2_mlr, fit.measures = T, standardized = T)
+fitmea_hm4v2_mlr <- fitMeasures(fit_hm4v2_mlr, 
                                 fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
                                                  "rmsea", "srmr"))
 
@@ -698,6 +633,13 @@ lavTestLRT(fit_hm2v2_pml, fit_hm4v2_pml) # 2 factor with or w/o covar? p=0.3381
 
 lavTestLRT(fit_hm1v2_pml, fit_hm2v2_pml) # 1 or 2 factor w/o covar? p=0.3786
 lavTestLRT(fit_hm3v2_pml, fit_hm4v2_pml) # 1 or 2 factor with covar? p=0.3625
+
+# MLR estimator (more appropriate for continuous data)
+lavTestLRT(fit_hm1v2_mlr, fit_hm3v2_mlr) # 1 factor with or w/o covar? p=2.2e-16
+lavTestLRT(fit_hm2v2_mlr, fit_hm4v2_mlr) # 2 factor with or w/o covar? p=2.2e-16
+
+lavTestLRT(fit_hm1v2_mlr, fit_hm2v2_mlr) # 1 or 2 factor w/o covar? p=0.0996
+lavTestLRT(fit_hm3v2_mlr, fit_hm4v2_mlr) # 1 or 2 factor with covar? p=0.1263
 
 ```
 
@@ -718,10 +660,16 @@ puberty =~ sal_dhea + sal_estr + sal_test + estr_hair
 
 # Fit RHM1:
 fit_rhm1_pml <- cfa(rhm1, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+fit_rhm1_mlr <- cfa(rhm1, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr") 
 
 # Summary Stats for RHM1
 summary(fit_rhm1_pml, fit.measures = T, standardized = T)
 fitmea_rhm1_pml <- fitMeasures(fit_rhm1_pml,
+                                fit.measures = c("cfi","ecvi","mfi", 
+                                                 "chisq", "pvalue", "rmsea", "srmr"))
+
+summary(fit_rhm1_mlr, fit.measures = T, standardized = T)
+fitmea_rhm1_mlr <- fitMeasures(fit_rhm1_mlr,
                                 fit.measures = c("cfi","ecvi","mfi", 
                                                  "chisq", "pvalue", "rmsea", "srmr"))
 
@@ -742,10 +690,15 @@ gonadal =~ sal_estr + estr_hair
 
 # Fit RHM2:
 fit_rhm2_pml <- cfa(rhm2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+fit_rhm2_mlr <- cfa(rhm2, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr") 
 
 # Summary Stats for RHM2
 summary(fit_rhm2_pml, fit.measures = T, standardized = T)
 fitmea_rhm2_pml <- fitMeasures(fit_rhm2_pml, 
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                 "rmsea", "srmr"))
+summary(fit_rhm2_mlr, fit.measures = T, standardized = T)
+fitmea_rhm2_mlr <- fitMeasures(fit_rhm2_mlr, 
                                 fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
                                                  "rmsea", "srmr"))
 
@@ -776,13 +729,17 @@ estr4 ~~ test4
 
 # Fit RHM3
 fit_rhm3_pml <- cfa(rhm3, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr")
+fit_rhm3_mlr <- cfa(rhm3, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr")
 
 # Summary Stats for RHM3
 summary(fit_rhm3_pml, fit.measures = T, standardized = T)
 fitmea_rhm3_pml <- fitMeasures(fit_rhm3_pml,
                                 fit.measures = c("cfi","ecvi","mfi", "chisq", 
                                                  "pvalue", "rmsea", "srmr"))
-
+summary(fit_rhm3_mlr, fit.measures = T, standardized = T)
+fitmea_rhm3_mlr <- fitMeasures(fit_rhm3_mlr,
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", 
+                                                 "pvalue", "rmsea", "srmr"))
 # Pictoral Representation of RHM3
 semPaths(fit_rhm3_pml)
 
@@ -811,13 +768,17 @@ estr4 ~~ test4
 
 # Fit RHM4:
 fit_rhm4_pml <- cfa(rhm4, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr") 
+fit_rhm4_mlr <- cfa(rhm4, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr") 
 
 # Summary Stats for RHM4
 summary(fit_rhm4_pml, fit.measures = T, standardized = T)
 fitmea_rhm4_pml <- fitMeasures(fit_rhm4_pml, 
                                 fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
                                                  "rmsea", "srmr"))
-
+summary(fit_rhm4_mlr, fit.measures = T, standardized = T)
+fitmea_rhm4_mlr <- fitMeasures(fit_rhm4_mlr, 
+                                fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue",
+                                                 "rmsea", "srmr"))
 # Pictoral Representation of RHM4
 semPaths(fit_rhm4_pml)
 
@@ -827,6 +788,12 @@ lavTestLRT(fit_rhm2_pml, fit_rhm4_pml) # 2 factor with or w/o covar?
 
 lavTestLRT(fit_rhm1_pml, fit_rhm2_pml) # 1 or 2 factor w/o covar? 
 lavTestLRT(fit_rhm3_pml, fit_rhm4_pml) # 1 or 2 factor with covar? 
+
+lavTestLRT(fit_rhm1_mlr, fit_rhm3_mlr) # 1 factor with or w/o covar? 
+lavTestLRT(fit_rhm2_mlr, fit_rhm4_mlr) # 2 factor with or w/o covar? 
+
+lavTestLRT(fit_rhm1_mlr, fit_rhm2_mlr) # 1 or 2 factor w/o covar? 
+lavTestLRT(fit_rhm3_mlr, fit_rhm4_mlr) # 1 or 2 factor with covar? 
 ```
 
 
@@ -1218,6 +1185,7 @@ fit_fm2v2_pml <- cfa(fm2v2, data = data, estimator = "PML",
 # Summary Stats for FM2v2
 summary(fit_fm2v2_pml, fit.measures = T, standardized = T)
 fitmea_fm2v2_pml <- fitmeasures(fit_fm2v2_pml, fit.measures = c("cfi","ecvi","mfi"))
+
 fit_fm2v2_pml_parest <- parameterEstimates(fit_fm2v2_pml)
 lavaan:::ctr_pml_plrt(fit_fm2v2_pml)
 
