@@ -1063,7 +1063,7 @@ fitmea_fm1v2_pml_nocov <- fitmeasures(fit_fm1v2_pml_nocov,
             fit.measures = c("cfi","ecvi","mfi")) 
 
 
-# Define Full Model (FM)2v2 - two factor, including hair, second level factors (hormone and self-report)
+# Define Full Model (FM)2v2 - two factor, including hair E2, second level factors (hormone and self-report)
 fm2v2 <- "
 #Latent Variables
 
@@ -1113,6 +1113,109 @@ semPaths(fit_fm2v2_pml)
 anova(fit_fm2v2_pml, fit_fm1v2_pml) 
 lrtest(fit_fm2v2_pml, fit_fm1v2_pml)
 
+####
+# AGE POSTHOC ANALYSES
+# Try FM2v2 (2 factor, hair E2) but:
+# 1) correlate both ADR and GON with age (FM2v2_agecor)
+# 2) correlate ADR and GON controlling for age (FM2v2_ageres)
+
+# first add age back to the dataset
+age <- read.csv(file.path(workdir,"Demographics/Age/TAG_age.csv", fsep=""))
+agew1s1 <- age[ which(age$wave=='1' & age$session=='1'), ]
+agevars <- c("SID", "age")
+agew1s1 <- agew1s1[agevars]
+data_age <- inner_join(agew1s1, data, by = "SID")
+
+#now build the first one, ADR and GON correlate with age (note that lavaan automatically shows correlations for ADR and GON and Agefac)
+fm2v2_agecor <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + estr_hair + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#covary observed age and latent neuroendo systems by tricking lavaan
+agefac =~ age
+"
+#now build the second one, ADR and GON correlate, controlling for age 
+fm2v2_ageres <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + estr_hair + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+# tricking lavaan again
+agefac =~ age
+
+#factor regressions on age
+adrenal ~ agefac
+gonadal ~ agefac
+"
+
+# Fit fm2v2_agecor and fm2v2_ageres
+fit_fm2v2_agecor <- cfa(fm2v2_agecor, data = data_age, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+fit_fm2v2_ageres <- cfa(fm2v2_ageres, data = data_age, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
+
+# Summary Stats for FM2v2_agecor and FM2v2_ageres
+summary(fit_fm2v2_agecor, fit.measures = T, standardized = T)
+fitmea_fm2v2_agecor <- fitmeasures(fit_fm2v2_agecor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_fm2v2_ageres, fit.measures = T, standardized = T)
+fitmea_fm2v2_ageres <- fitmeasures(fit_fm2v2_ageres, fit.measures = c("cfi","ecvi","mfi"))
+
+fit_fm2v2_agecor_parest <- parameterEstimates(fit_fm2v2_agecor)
+lavaan:::ctr_pml_plrt(fit_fm2v2_agecor)
+
+fit_fm2v2_ageres_parest <- parameterEstimates(fit_fm2v2_ageres)
+lavaan:::ctr_pml_plrt(fit_fm2v2_ageres)
+
+# Pictoral Representation of FM2v2
+semPaths(fit_fm2v2_ageres)
 
 #####
 # Try full models again with ONLY saliva (not even E2 hair)
