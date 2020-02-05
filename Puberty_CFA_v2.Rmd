@@ -1023,14 +1023,10 @@ fitmea_fm1v2_pml <- fitmeasures(fit_fm1v2_pml,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea",
                              "srmr")) 
 
-#summary(fit_fm1v2_mlr, fit.measures = T, standardized = T) 
-#fitmea_fm1v2_mlr <- fitmeasures(fit_fm1v2_mlr,
-#            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea",
-#                             "srmr")) 
-
 # Pictoral Representation of Full Model 1 v2
 semPaths(fit_fm1v2_pml)
 
+#Just check it's not better without saliva days covarying
 fm1v2_nocov <- "
 #Latent Variables
 
@@ -1214,11 +1210,31 @@ lavaan:::ctr_pml_plrt(fit_fm2v2_agecor)
 fit_fm2v2_ageres_parest <- parameterEstimates(fit_fm2v2_ageres)
 lavaan:::ctr_pml_plrt(fit_fm2v2_ageres)
 
-# Pictoral Representation of FM2v2
+# Pictoral Representation of FM2v2_ageres
 semPaths(fit_fm2v2_ageres)
 
+######
+#Extracting latent variable estimates per subject for funsies
+
+# lve1.puberty is 1 factor score from full model with saliva and hair E2
+fit_fm1v2_extract_vars <- lavPredict(fit_fm1v2_pml, method = "EBM", type = "lv")
+fm1v2_lve <- as.data.frame(fit_fm1v2_extract_vars)
+pub_lve <- select(fm1v2_lve, "puberty")
+data$lve1 <- pub_lve
+
+# lve2.adrenal and lve3.gonadal are the 2 factor scores from full model with saliva and hair E2
+fit_fm2v2_extract_vars <- lavPredict(fit_fm2v2_pml, method = "EBM", type = "lv")
+fm2v2_lve <- as.data.frame(fit_fm2v2_extract_vars)
+adr_lve <- select(fm2v2_lve, "adrenal")
+gon_lve <- select(fm2v2_lve, "gonadal")
+data$lve2 <- adr_lve
+data$lve3 <- gon_lve
+
+write.csv(data, "Z:/dsnlab/TAG/projects/W1_puberty_modelling/data_lve.csv")
+
+
 #####
-# Try full models again with ONLY saliva (not even E2 hair)
+# Versions 3 - Try full models again with ONLY saliva (not even E2 hair)
 fm1v3 <- "
 #Latent Variables
 
