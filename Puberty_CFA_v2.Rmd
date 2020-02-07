@@ -1149,7 +1149,7 @@ estr3 ~~ test3
 dhea4 ~~ estr4 + test4
 estr4 ~~ test4
 
-#covary observed age and latent neuroendo systems by tricking lavaan
+#covary observed age and latent neuroendo systems by tricking lavaan (remember that lavaan always fixes the first loading to 1)
 agefac =~ age
 "
 #now build the second one, ADR and GON correlate, controlling for age 
@@ -1186,8 +1186,42 @@ agefac =~ age
 adrenal ~ agefac
 gonadal ~ agefac
 "
+# Finally, see if agecor fit is worse if you constrain age correlations to be the same across ADR and GON (because then age is more correlated with one, in this case GON 0.695 vs ADR 0.580)
+fm2v2_agecorcon <- "
+#Latent Variables
 
-# Fit fm2v2_agecor and fm2v2_ageres
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + estr_hair + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#covary observed age and latent neuroendo systems 
+agefac =~ age
+
+# constrain correlations to see if it fits worse than fm2v2_agecor
+adrenal ~~ c*agefac
+gonadal ~~ c*agefac
+"
+
+# Fit fm2v2_agecor, fm2v2_ageres, and fm2v2_agecorcon
 fit_fm2v2_agecor <- cfa(fm2v2_agecor, data = data_age, estimator = "PML", 
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS1","PDS2","PDS3","PDS4",
@@ -1196,13 +1230,20 @@ fit_fm2v2_ageres <- cfa(fm2v2_ageres, data = data_age, estimator = "PML",
                       missing = "available.cases", verbose = T,  
                      ordered = c("PDS1","PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
+fit_fm2v2_agecorcon <- cfa(fm2v2_agecorcon, data = data_age, estimator = "PML", 
+                      missing = "available.cases", verbose = T,  
+                     ordered = c("PDS1","PDS2","PDS3","PDS4",
+                                 "PDS6","PBIP1","PBIP2"))
 
-# Summary Stats for FM2v2_agecor and FM2v2_ageres
+# Summary Stats for FM2v2_agecor, FM2v2_ageres, and fm2v2_agecorcon
 summary(fit_fm2v2_agecor, fit.measures = T, standardized = T)
 fitmea_fm2v2_agecor <- fitmeasures(fit_fm2v2_agecor, fit.measures = c("cfi","ecvi","mfi"))
 
 summary(fit_fm2v2_ageres, fit.measures = T, standardized = T)
 fitmea_fm2v2_ageres <- fitmeasures(fit_fm2v2_ageres, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_fm2v2_agecorcon, fit.measures = T, standardized = T)
+fitmea_fm2v2_agecorcon <- fitmeasures(fit_fm2v2_agecorcon, fit.measures = c("cfi","ecvi","mfi"))
 
 fit_fm2v2_agecor_parest <- parameterEstimates(fit_fm2v2_agecor)
 lavaan:::ctr_pml_plrt(fit_fm2v2_agecor)
@@ -1210,8 +1251,16 @@ lavaan:::ctr_pml_plrt(fit_fm2v2_agecor)
 fit_fm2v2_ageres_parest <- parameterEstimates(fit_fm2v2_ageres)
 lavaan:::ctr_pml_plrt(fit_fm2v2_ageres)
 
-# Pictoral Representation of FM2v2_ageres
+fit_fm2v2_agecorcon_parest <- parameterEstimates(fit_fm2v2_agecorcon)
+lavaan:::ctr_pml_plrt(fit_fm2v2_agecorcon)
+
+# see if agecorcon fits significantly worse than agecor (if so, age is more strongly correlated with GON than ADR)
+anova(fit_fm2v2_agecor, fit_fm2v2_agecorcon)
+
+# Pictoral Representation of FM2v2_agecor, FM2v2_ageres, and FM2v2_agecorcon
+semPaths(fit_fm2v2_agecor)
 semPaths(fit_fm2v2_ageres)
+semPaths(fit_fm2v2_agecorcon)
 
 ######
 #Extracting latent variable estimates per subject for funsies
