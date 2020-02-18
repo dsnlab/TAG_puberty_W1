@@ -1,0 +1,313 @@
+---
+title: "puberty_cca"
+author: "Theresa Cheng"
+date: "3/29/2019"
+output: html_document
+---
+
+```{r setup and load data, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# load packages, install as needed
+packages = c("tidyr", "dplyr", "ggplot2", "skimr", "knitr", "PMA", "psych", "candisc", "caret")
+
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE) }})
+
+puberty_EM <- read.csv("/Volumes/psych-cog/dsnlab/TAG/projects/W1_puberty_cca/puberty_df_EM_imputed1.csv")
+
+# acquire hormone only dataframe 
+hormones <- puberty_EM[, c("mean_saliva_EST", "mean_saliva_TEST", "mean_saliva_DHEA","hair_EST_pgug","hair_TEST_pgmg", "hair_DHEA_pgmg")] #
+
+# acquire physical maturation self report variables only
+physical_mat <- puberty_EM[, c("pds1_height", "pds2_hair", "pds3_skin", "pds4_breasts",  "pbip1_breasts", "pbip2_pubic_hair")] # "pds6_period",
+#physical_mat <- as.data.frame(lapply(physical_mat, factor, ordered = TRUE)) # recode all of these as factors
+
+rm(packages, package.check)
+```
+
+## Descriptive statistics
+```{r inspect univariate descriptive stats, echo = FALSE}
+
+# univariate descriptive statistics
+skim(hormones)
+skim(physical_mat)
+skim(puberty_EM$ageS2)
+```
+
+Examining univariate descriptive statistics of our dataset verifies that there is no missing data due to EM imputation at a prior step. Transformed hormone distributions are approximately normal, and we should verify whether the lower and upper limits are within biologically plausible ranges (did not set bounds during imputation). Ignoring the middle column of the PDS data (because its responses have four levels rather than five), the physical maturation data is approximately normal as well. In contrast, the age distribution is fairly flat, verifying that we sampled fairly evenly across the age range.
+
+```{r inspect bivariate descriptive stats, echo = FALSE}
+
+# hormone to hormone
+cor_matrix_h <- cor(hormones)
+corrplot::corrplot(cor_matrix_h, type = "upper",
+         tl.col = "black", tl.srt = 45)
+
+# physical maturation to physical maturation
+cor_matrix_pm <- cor(physical_mat, method = "spearman") # ordinal data
+corrplot::corrplot(cor_matrix_pm, type = "upper",
+         tl.col = "black", tl.srt = 45)
+
+# hormones to physical maturation
+cor_matrix_h_pm <- cor(hormones, physical_mat)
+corrplot::corrplot(cor_matrix_h_pm, tl.col = "black", tl.srt = 45)
+```
+
+Examining correlation matrices suggests that the high correlations between the physical maturation measures (especially those between the PDS items related to hair growth and breast development, along with similar PBIP measures) might problematic in terms of collinearity. Additionally, the fairly low correlations between some of the hair hormone measures (especially the negative correlations with DHEA) may add noise to the model. 
+
+```{r cca functions}
+# Modified from Dinga et al., 2018 
+
+select_and_cca_fit <- function(X, Y){
+  #select
+  correlations <- cor(Y, X, method = "spearman")
+  correlations <- apply(correlations, 2, function(x){max(abs(x))})
+  corr.threshold <- sort(correlations, decreasing = T)
+  selected.X <- correlations >= corr.threshold
+  selected.X <- X[,selected.X]
+  #cca fit
+  cca_model <- candisc::cancor(selected.X, Y)
+  #return fitted model containing canonical correlations and wilks lambdas
+  return(cca_model)
+}
+
+predict.cancor <- function(cancor.obj, X, Y){
+  X_pred <- as.matrix(X) %*% cancor.obj$coef$X
+  Y_pred <- as.matrix(Y) %*% cancor.obj$coef$Y
+  XY_pred <- list(X_pred, Y_pred)
+  names(XY_pred) <- c("X_pred", "Y_pred")
+  return(XY_pred)
+}
+
+cca_cv <- function(hormone_variables, phys_mat_variables, age){
+  n_folds <- 10
+  folds <- createFolds(as.factor(age), n_folds, list=F)
+  results_cancor <- list()
+  
+  for (fold in 1:n_folds) {
+    
+    # create training and test set
+    train_hormones <- hormone_variables[folds != fold,]
+    train_phys_mat <- phys_mat_variables[folds != fold,]
+    test_hormones <- hormone_variables[folds == fold,]
+    test_phys_mat <- phys_mat_variables[folds == fold,]
+   
+     # fit on training set
+    cancor.fit <- select_and_cca_fit(train_hormones, train_phys_mat)
+    
+    # predict on test set
+    XY_pred_cancor <- predict.cancor(cancor.fit,
+                                     test_hormones[,cancor.fit$names$X],
+                                     test_phys_mat)
+    results_cancor[[fold]] <- diag(cor(XY_pred_cancor[[1]],
+    XY_pred_cancor[[2]]))
+    
+  }
+return(do.call(rbind, results_cancor))
+}
+
+```
+
+
+## Run CCA on puberty measures with hormones vs. self-report data
+```{r run with candisc functions}
+
+physical_mat_pds <- physical_mat[, c("pds1_height", "pds2_hair", "pds3_skin", "pds4_breasts" )]
+physical_mat_pbip <- physical_mat[, c("pds1_height", "pbip2_pubic_hair", "pds3_skin", "pbip1_breasts")]
+
+# run once with pds hair and breast measures
+cca_model <- select_and_cca_fit(hormones, physical_mat)
+
+cca_model$cancor
+
+canonical.variates <- predict.cancor(cca_model,
+  hormones[,cca_model$names$X],
+  physical_mat)
+
+cca_x_loadings <- cor(hormones, canonical.variates$X_pred)
+cca_x_loadings
+
+cca_y_loadings <- cor(physical_mat, canonical.variates$Y_pred)
+cca_y_loadings
+
+cor_matrix_pm
+```
+
+Using all of the data, the canonical loadings of breast development onto the second variate are both positively and negatively associated with breast development. It seems likely that multicollinearity is an issue. We note particularly high correlations between pds2_hair and pbip2_pubic_hair, and pds4_breasts and pbip1_breasts. For now, we take the approach of running everything with PDS only, and then re-running with pbip in order to compare how using difference questionnaires for those two measures impacts the canonical loadings.
+
+## Re-run CCA with just PDS measures and hormone data
+```{r}
+
+# run once with pds hair and breast measures
+cca_model_pds <- select_and_cca_fit(hormones, physical_mat_pds)
+
+cca_model_pds$cancor
+
+canonical.variates <- predict.cancor(cca_model_pds,
+  hormones[,cca_model_pds$names$X],
+  physical_mat_pds)
+
+cv_X_hormones_pds <- canonical.variates$X_pred
+cv_Y_physMat_pds <- canonical.variates$Y_pred
+
+cca_x_loadings_pds <- cor(hormones, canonical.variates$X_pred)
+cca_x_loadings_pds
+cca_y_loadings_pds <- cor(physical_mat_pds, canonical.variates$Y_pred)
+cca_y_loadings_pds
+
+par(mfrow=c(1,2))
+
+plot(canonical.variates$X_pred[,1],
+  canonical.variates$Y_pred[,1],
+  bty='n',
+  xlab='Hormone canonical variate 1',
+  ylab='Physical mat pds canonical variate 1')
+round(cca_model_pds$cancor[1], 2) # doesn't work, but r = .55
+
+plot(canonical.variates$X_pred[,2],
+  canonical.variates$Y_pred[,2],
+  bty='n',
+  xlab='Hormone canonical variate 2',
+  ylab='Physical mat pds canonical variate 2')
+round(cca_model_pds$cancor[2], 2) # doesn't work, but r = .35
+
+real_model_pds <- cca_model_pds
+real_results_cancor <- real_model_pds$cancor
+real_results_wilks_pds <- Wilks(real_model_pds)
+real_results_wilks_pds
+
+### 10-fold cross-validation
+pds_results_per_fold <- cca_cv(hormones, physical_mat_pds, puberty_EM$ageS2)[,1:2]
+colMeans(pds_results_per_fold)
+par(mfrow=c(1,1))
+
+plot(
+  cbind(pds_results_per_fold[, 1], pds_results_per_fold[, 2]),
+  1:20,
+  yaxt = "n",
+  xlim = c(-1, 1),
+  bty = 'n',
+  ylab = 'Cross-validation fold',
+  xlab = 'Test-set correlation',
+  main = 'Out of sample correlation',
+  pch = c(rep(19, 10), rep(1, 10))
+)
+axis(2, at = c(1:20), labels = c(10:1, 10:1))#, lty='blank')
+abline(v = 0, col = 'grey')
+legend("topleft",
+       c('CV1', 'CV2'),
+       bty = 'n',
+       pch = c(19, 1))
+```
+
+The first canonical variate seems to explain significant variation in the data, but none of the others. Examining both the x and y loadings suggests that this is a general puberty factor. 
+
+## Re-run CCA with PBIP hair and breast measures, remaining PDS measures, and hormone data
+```{r cca with pbip hair and breast measures}
+
+# run once with pbip hair and breast measures
+cca_model_pbip <- select_and_cca_fit(hormones, physical_mat[, c("pds1_height", "pbip2_pubic_hair", "pds3_skin", "pbip1_breasts" )])
+
+cca_model_pbip$cancor
+
+canonical.variates <- predict.cancor(cca_model_pbip,
+  hormones[,cca_model_pbip$names$X],
+  physical_mat_pbip)
+
+cv_X_hormones_pbip <- canonical.variates$X_pred
+cv_Y_physMat_pbip <- canonical.variates$Y_pred
+
+cca_x_loadings_pbip <- cor(hormones, canonical.variates$X_pred)
+cca_x_loadings_pbip
+cca_y_loadings_pbip <- cor(physical_mat_pbip, canonical.variates$Y_pred)
+cca_y_loadings_pbip
+
+par(mfrow=c(1,2))
+
+plot(canonical.variates$X_pred[,1],
+  canonical.variates$Y_pred[,1],
+  bty='n',
+  xlab='Hormone canonical variate 1',
+  ylab='Physical mat pbip canonical variate 1')
+round(cca_model_pbip$cancor[1], 2) 
+
+plot(canonical.variates$X_pred[,2],
+  canonical.variates$Y_pred[,2],
+  bty='n',
+  xlab='Hormone canonical variate 2',
+  ylab='Physical mat pbip canonical variate 2')
+round(cca_model_pbip$cancor[2], 2) 
+
+real_model <- cca_model_pbip
+real_results_cancor <- real_model$cancor
+real_results_wilks_pbip <- Wilks(real_model)
+real_results_wilks_pbip
+
+# 10x cross validation
+pbip_results_per_fold <- cca_cv(hormones, physical_mat_pbip, puberty_EM$ageS2)[,1:2]
+colMeans(pbip_results_per_fold)
+par(mfrow=c(1,1))
+plot(
+  cbind(pbip_results_per_fold[, 1], pbip_results_per_fold[, 2]),
+  1:20,
+  yaxt = "n",
+  xlim = c(-1, 1),
+  bty = 'n',
+  ylab = 'Cross-validation fold',
+  xlab = 'Test-set correlation',
+  main = 'Out of sample correlation',
+  pch = c(rep(19, 10), rep(1, 10))
+)
+axis(2, at = c(1:20), labels = c(10:1, 10:1))#, lty='blank')
+abline(v = 0, col = 'grey')
+legend("topleft",
+       c('CV1', 'CV2'),
+       bty = 'n',
+       pch = c(19, 1))
+```
+
+## Save canonical variates from PDS and PBIP analyses
+
+```{r}
+
+canonical_variates <- data.frame(cv_X_hormones_pds[, 1], cv_Y_physMat_pds[, 1], cv_X_hormones_pbip[, 1], cv_Y_physMat_pbip[, 1])
+saveRDS(canonical_variates, "/Volumes/psych-cog/dsnlab/TAG/projects/W1_puberty_cca/canonical_variates.rds")
+```
+
+
+#### Possible next steps to discuss at lab meeting:
+- Run reduced hormone models, as in CFA (removing hair DHEA and hair T).
+- Search for penalized CCA options to be able to run with PBIP and PDS in the same model. Possibly implement NLCCA with ordinal PBIP and PDS using the homals package? Might be able to handle PBIP and PDS in the same model?
+
+```{r run cca in pma, include = FALSE}
+
+#using PMA package
+
+# use permutations to identify best L1 bound for x and z
+perm.out <- CCA.permute(hormones, physical_mat, typex = "standard", typez = "standard", nperms = 100, penaltyxs=seq(.1,1,len=10), penaltyzs=seq(.1,1,len=10))
+print(perm.out)
+plot(perm.out)
+
+cca_output <- CCA(x = hormones, z = physical_mat, typex = "standard", typez = "standard", penaltyx = .9, penaltyz = .9, K = 3)
+# note: in examining the pma package documentation and the linked paper (Tibshirani and Wang), it seems that the "ordered" type doesn't deal with ordinal data, but rather with columns that have some kind of order to them, as in genes on a chromosome as in comparative genomic hybridization data. 
+
+# okay so damn. PMA offers penalized CCA options but no Wilks lambda test. candisc offers the reverse. PMA *DOES* have a permutation test and seems to handle the multicollinearity a bit better, but it only ever shows the FIRST variate. 
+```
+
+```{r run cca in homals, include = FALSE}
+
+# testing teh feasibility of running homals -- but note that it employs nonlinear cca as an extension of homogeneity analyses (uses a loss function, isn't just maximizing linear associations)
+
+puberty_EM_clean_pds <- cbind(physical_mat_pds, hormones)
+
+data(galo)
+res <- homals(galo, active = c(rep(TRUE, 4), FALSE), sets = list(c(1,2),c(3,4),5))
+
+test <- homals(puberty_EM_clean_pds, 
+               active = TRUE,
+               sets = list(c(1:4), c(5:10)), 
+               level = c(rep("ordinal", 4), rep("numerical", 6)))
+```

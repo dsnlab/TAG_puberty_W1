@@ -1,0 +1,70 @@
+---
+title: "puberty_cca"
+author: "Theresa Cheng"
+date: "3/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+packages = c("ggplot2", "tidyr", "dplyr", "knitr", "PMA", "rio", "mice", "miceadds")
+
+# load packages, install as needed
+package.check <- lapply(packages, FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+        install.packages(x, dependencies = TRUE)
+        library(x, character.only = TRUE) }})
+```
+
+```{r load data}
+
+# data files
+data_dir <- "/Volumes/psych-cog/dsnlab/TAG/projects/W1_puberty_cca"
+puberty_file <- "/puberty_df_EM_imputed1.csv"
+canonical_variates_file <- "/canonical_variates.rds"
+stress_file <- "/stress_df.rds"
+
+puberty_EM <- import(paste0(data_dir, puberty_file))
+canonical_variates <- import(paste0(data_dir, canonical_variates_file))
+colnames(canonical_variates) = c("cv_X_hormones_pds", "cv_Y_physMat_pds", "cv_X_hormones_pbip", "cv_Y_physMat_pbip")
+stress_df <- import(paste0(data_dir, stress_file))
+
+model_df <- cbind(canonical_variates, stress_df)
+model_df$income <- factor(model_df$income)
+model_df$w1s2age <- puberty_EM$ageS2
+
+```
+
+## Relate canonical variates (PDS data only) to other variables
+
+```{r extract values from pds}
+
+M1_hormoneCV1_age <- lm(cv_X_hormones_pds ~ w1s2age, data = model_df)
+summary(M1_hormoneCV1_age)
+
+M1_physCV1_age <- lm(cv_Y_physMat_pds ~ w1s2age, data = model_df)
+summary(M1_physCV1_age)
+
+M2_hormoneCV1_age_income <- lm(cv_X_hormones_pds ~ w1s2age + income, data = model_df)
+summary(M2_hormoneCV1_age_income)
+
+M2_physCV1_age_income <- lm(cv_Y_physMat_pds ~ w1s2age + income, data = model_df)
+summary(M2_physCV1_age_income)
+
+M3_hormoneCV1_age_ctq <- lm(cv_X_hormones_pds ~ w1s2age + ctq_sum, data = model_df)
+summary(M3_hormoneCV1_age_ctq)
+
+M3_physCV1_age_ctq <- lm(cv_Y_physMat_pds ~ w1s2age + ctq_sum, data = model_df)
+summary(M3_physCV1_age_ctq)
+
+# M4_hormoneCV1_age_income_ctq <- lm(cv_X_hormones_pds ~ w1s2age + income + ctq_sum, data = model_df)
+# summary(M3_hormoneCV1_age_ctq)
+# 
+# M4_physCV1_age_income_ctq <- lm(cv_Y_physMat_pds ~ w1s2age + income + ctq_sum, data = model_df)
+# summary(M3_physCV1_age_ctq)
+
+```
+
+
+Notes: Should compare to PDS scores to see if there's any advantage

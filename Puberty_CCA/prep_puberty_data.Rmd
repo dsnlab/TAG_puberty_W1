@@ -1,0 +1,89 @@
+---
+title: "puberty_cca"
+author: "Theresa Cheng"
+date: "3/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+packages = c("tidyr", "dplyr", "rio", "stringr")
+
+# load packages, install as needed
+package.check <- lapply(packages, FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+        install.packages(x, dependencies = TRUE)
+        library(x, character.only = TRUE) }})
+```
+
+```{r load data}
+
+save_clean_data = TRUE
+
+# data files
+data_dir <- "/Volumes/psych-cog/dsnlab/TAG/behavior"
+output_dir <- "/Volumes/psych-cog/dsnlab/TAG/projects/W1_puberty_cca"
+saliva_file <- "/Puberty/Saliva/Wave1/TAG_W1_Saliva_wide_cens_only4.csv"
+hair_file <- "/Puberty/Hair/Wave1/TAG_W1_Hair_processed.csv"
+pds_file <- "/Questionnaires/Wave1/PDS_Wave1.csv"
+pbip_file <- "/Questionnaires/Wave1/PBIP_Wave1.csv"
+
+# load and clean saliva data
+saliva_df <- import(paste0(data_dir, saliva_file))
+saliva_df$SID <- str_pad(saliva_df$SID, 3, pad = "0")
+saliva_df$SID <- paste0("TAG", saliva_df$SID)
+
+# get age
+age_df <- saliva_df[, c("SID", "ageS2")]
+
+# ok continuing on with saliva now
+saliva_df_EST <- saliva_df[, c("SID", "sal_EST_conc_ln_w_1", "sal_EST_conc_ln_w_2", "sal_EST_conc_ln_w_3", "sal_EST_conc_ln_w_4")]
+saliva_df_TEST <- saliva_df[, c("SID", "sal_TEST_conc_ln_w_1", "sal_TEST_conc_ln_w_2", "sal_TEST_conc_ln_w_3", "sal_TEST_conc_ln_w_4")]
+saliva_df_DHEA <- saliva_df[, c("SID", "sal_DHEA_conc_ln_w_1", "sal_DHEA_conc_ln_w_2", "sal_DHEA_conc_ln_w_3", "sal_DHEA_conc_ln_w_4")]
+
+find_saliva_mean <- function(saliva_df_hormone, hormone_name){
+  df <- gather(saliva_df_hormone, key = "week" , value = "concentration", -SID) %>% 
+  group_by(SID) %>% 
+  summarise(mean = mean(concentration, na.rm = TRUE))
+  df$SID <- as.character(df$SID)
+  colnames(df) <- c("SID", paste0("mean_saliva_", hormone_name))
+  return(df)
+}
+
+mean_EST <- find_saliva_mean(saliva_df_EST, "EST")
+mean_TEST <- find_saliva_mean(saliva_df_TEST, "TEST")
+mean_DHEA <- find_saliva_mean(saliva_df_DHEA, "DHEA")
+saliva_mean_df <- full_join(mean_EST, mean_TEST, by = "SID") %>%
+  full_join(., mean_DHEA, by = "SID")
+
+# load hair data
+hair_df <- import(paste0(data_dir, hair_file))
+hair_df <- spread(hair_df[, -3], hormone, concentration_ln)
+hair_df$SID <- as.character(hair_df$SID)
+hair_df$SID <- str_pad(hair_df$SID, 3, pad = "0")
+hair_df$SID <- paste0("TAG", hair_df$SID)
+
+# merge hair and saliva data
+hormone_df <- full_join(saliva_mean_df, hair_df, by = "SID") %>% 
+  full_join(., age_df, by = "SID")
+
+# load physical maturation data
+pds_df <- import(paste0(data_dir, pds_file))
+pds_df <- pds_df[, c("tagid", "PDS_F1", "PDS_F2", "PDS_F3", "PDS_F4", "PDS_F6")] # did not include Q 5 re: timing
+colnames(pds_df) <- c("SID", "pds1_height", "pds2_hair", "pds3_skin", "pds4_breasts", "pds6_period")
+
+pbip_df <- import(paste0(data_dir, pbip_file))
+pbip_df <- pbip_df[, c("tagid", "PBIP_1A", "PBIP_2A")]
+colnames(pbip_df) <- c("SID", "pbip1_breasts", "pbip2_pubic_hair")
+
+physical_mat_df <- full_join(pds_df, pbip_df, by = "SID")
+```
+
+```{r save cleaned data}
+
+if (save_clean_data == TRUE) {
+  saveRDS(hormone_df, paste0(output_dir, "/hormone_df.RDS"))
+  saveRDS(physical_mat_df, paste0(output_dir, "/physical_mat_df.RDS"))
+}
+```
