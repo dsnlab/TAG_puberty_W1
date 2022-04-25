@@ -784,46 +784,18 @@ summary(fit_slm3_mlr, fit.measures = T, standardized = T)
                                 #                  "pvalue", "rmsea", "srmr"))
 #lavTestLRT(fit_slm1_mlr, fit_slm3_mlr) # 1 factor with or w/o covar? 
 
-```
 
-
-## Step 4 - Post hoc hormone Models 2 - Hair Predicts Saliva
-```{r Hair Predicts Saliva}
-# Define HSM1 - No methods factors
-hsm1 <- "
+#Saliva 2-factor
+slm4 <- "
 #Latent Saliva Variables
 sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
 sal_estr =~ estr1 + estr2 + estr3 + estr4
 sal_test =~ test1 + test2 + test3 + test4
 
-#Regressions
-sal_dhea ~ dhea_hair
-sal_estr ~ estr_hair
-sal_test ~ test_hair
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test
 
-#Covariances for Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-"
-# Define HSM2 (hair saliva model with method factors)
-hsm2 <- "
-#Latent Saliva Variables
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
-
-#Regressions
-sal_dhea ~ dhea_hair
-sal_estr ~ estr_hair
-sal_test ~ test_hair
-
-#Covariances for Sample Day
+#Covariances for Saliva Sample Day 
 dhea1 ~~ estr1 + test1
 estr1 ~~ test1
 dhea2 ~~ estr2 + test2
@@ -833,46 +805,23 @@ estr3 ~~ test3
 dhea4 ~~ estr4 + test4
 estr4 ~~ test4
 
-#Methods Factors
-hair =~ dhea_hair + estr_hair + test_hair
-saliva =~ dhea1 + dhea2 + dhea3 + dhea4 + estr1 + estr2 + estr3 + estr4 + test1 + test2 + test3 + test4
-
-#Set Latent Var Covariances to Zero
-hair ~~ 0*saliva + 0*sal_dhea + 0*sal_estr + 0*sal_test
-saliva ~~ 0*sal_dhea + 0*sal_estr + 0*sal_test
 "
 
-# Fit HSM1 All Data
-fit_hsm1_pml <- cfa(hsm1, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr")
+# Fit SLM3
+fit_slm4_mlr <- cfa(slm4, data = data, missing = "ML", estimator = "MLR", se = "robust.mlr")
 
-# Summary Stats for HSM1
-summary(fit_hsm1_pml, fit.measures = T, standardized = T) 
-fitmea_hsm1_pml <- fitMeasures(fit_hsm1_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
-
-semPaths(fit_hsm1_pml)
-
-# Fit Model HSM2
-fit_hsm2_pml <- cfa(hsm2, data = data, missing = "available.cases", estimator = "PML", se = "robust.mlr")
-
-# Summary Stats for HSM2
-summary(fit_hsm2_pml, fit.measures = T, standardized = T) 
-fitmea_hsm2_pml <- fitMeasures(fit_hsm2_pml, fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
-
-# Pictoral Representation of HSMs
-semPaths(fit_hsm1_pml)
-semPaths(fit_hsm2_pml)
-
-# Comparing Model Fits - wait these don't work
-lavTestLRT(fit_hsm1_pml, fit_hsm2_pml)
+# Summary Stats for SLM3
+summary(fit_slm4_mlr, fit.measures = T, standardized = T)
 
 ```
 
-Step 5: dracarys
+
+Step 4: full models
 ```{r FMs}
 ##########
 # All models here are "version 2 or 3" (version 1 was including all hair indicators, which we don't want to do according to HM results). 
 
-# Versions 2 have hair E2 (only) in them, versions 3 are saliva only (no hair). We also tried with and without covariances for the saliva days. We ran them all first using PML and got warnings, although lavaan gave us estimates and loadings anyway. "optim.gradients" were all zero and the fit indices were fine, so we have presented the PML results for all full models.
+# Versions 2 have hair E2 (only) in them, versions 3 are saliva only (no hair). We also tried with and without covariances for the saliva days. We ran them all first using PML and got warnings, although lavaan gave us estimates and loadings anyway. "optim.gradients" were all zero and the fit indices were fine, so we have presented the PML results for all full models. Note - we have to change to ML when including covariances with cortical thickness - we will present that these results are not very different between PML and ML
 
 ##########
 
@@ -1462,6 +1411,11 @@ fit_sr2_agecor <- cfa(sr2_agecor, data = data_age, estimator = "PML",
                      ordered = c("PDS1","PDS2","PDS3","PDS4",
                                  "PDS6","PBIP1","PBIP2"))
 
+# 2022 update: The above models with age in them no longer converge and I do 
+# not know why, other than it has been 3+ yrs since I last run them. They 
+# work with ML estimator and non-ordered data, so we may use this estimator
+# for the sMRI models below.
+
 # Summary Stats for FM2v2_agecor, FM2v2_ageres, and fm2v2_agecorcon
 summary(fit_fm2v2_agecor, fit.measures = T, standardized = T)
 fitmea_fm2v2_agecor <- fitmeasures(fit_fm2v2_agecor, fit.measures = c("cfi","ecvi","mfi"))
@@ -1504,18 +1458,14 @@ semPaths(fit_fm2v2_ageres)
 semPaths(fit_fm2v2_agecorcon)
 
 ## Compare correlations between age and the latent variables in the above models, with correlations with age using traditional self-report scales (PDS, LDs), or with mean value of salivary hormones.
-pub_scores <- read.csv(file.path(workdir,"../Projects/W1_W2_pubertal_timing/Timing_allways_w1.csv", fsep="")) #note: these are the same subjects that are in "data" but ok to keep separate because we aren't doing correlations across the observed scores (pub_scores) and the latent variables (data)
-pubvars <- c("pdsstage", "pdsscore", "age", "PUBcomp", "ADRENcomp", "GONADcomp", "mean_DHEA_ln", "mean_TEST_ln", "mean_EST_ln")
+pub_scores <- read.csv(file.path("Z:/dsnlab/TAG/Projects/W1_W2_pubertal_timing/Timing_allways_w1_forsMRI.csv", fsep="")) #note: these are the same subjects that are in "data" but ok to keep separate because we aren't doing correlations across the observed scores (pub_scores) and the latent variables (data)
+pubvars <- c("SID","pdsstage", "pdsscore", "age", "PUBcomp", "ADRENcomp", "GONADcomp", "mean_DHEA_ln", "mean_TEST_ln", "mean_EST_ln")
 pub_scores <- pub_scores[pubvars]
+
 allhorm <- c("mean_DHEA_ln", "mean_TEST_ln", "mean_EST_ln")
 pub_scores$mean_allhorm <- rowMeans(pub_scores[allhorm])
 adrhorm <- c("mean_DHEA_ln", "mean_TEST_ln")
 pub_scores$mean_adrhorm <- rowMeans(pub_scores[adrhorm])
-library(Hmisc)
-library(corrplot)
-pub_corr <- rcorr(as.matrix(pub_scores))
-pub_corr$r
-pub_corr$P
 
 # PUB composite (PDS/LD) & age: r = 0.4964629
 # All saliva (mean DHEA, T, E2) & age: r = 0.5302742
@@ -1537,6 +1487,353 @@ pub_corr$P
 #   ADREN Composite + saliva (mean DHEA, T) & age
 #   GONAD Composite + saliva (mean E2) & age
 #   Compared to CFA SR + saliva (FM2) & age
+
+```
+
+```{r sMRI}
+########## sMRI POSTHOC ANALYSES ##########
+# Do what we did for age above but for cortical thickness values.
+
+# First just add in the sMRI data to compare correlations
+pub_scores <- pub_scores %>% full_join(sMRI)
+
+pub_scores <- pub_scores[ , -1]
+library(Hmisc)
+library(corrplot)
+pub_corr <- rcorr(as.matrix(pub_scores))
+pub_corr$r
+pub_corr$n
+pub_corr$P
+write.csv(pub_corr$r, "Z:/TAG/projects/W1_puberty_modelling/puberty_sMRI/pubsmri_r.csv")
+write.csv(pub_corr$n, "Z:/TAG/projects/W1_puberty_modelling/puberty_sMRI/pubsmri_n.csv")
+write.csv(pub_corr$P, "Z:/TAG/projects/W1_puberty_modelling/puberty_sMRI/pubsmri_p.csv")
+
+# We start with the ones that popped up in the extracted correlations above:
+# left inferior parietal (l_infpar / lh_inferiorparietal_thickness), right inferior parietal (r_infpar), 
+# left precuneus (l_prec), right cuneus (r_cun), right superior temporal sulcus 
+# (r_sts), right occipital (r_occ), right paracentral (r_paracen)
+
+####### left inferior parietal ####### 
+
+# Now build the first one, ADR and GON correlate with thickness 
+# (note that lavaan automatically shows correlations for ADR and GON and thickness)
+fm2v2_l_infpar_cor <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + estr_hair + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#covary observed l_infpar and latent neuroendo systems by tricking lavaan 
+# (remember that lavaan always fixes the first loading to 1)
+l_infpar_fac =~ lh_inferiorparietal_thickness
+"
+
+# Check the thickness correlation with the one factor PUB latent variable, too
+fm1v2_l_infpar_cor <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#BioVars
+pub_bio =~ sal_dhea + sal_estr + sal_test + estr_hair
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+puberty =~ pub_sr + pub_bio
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#thickness factor
+l_infpar_fac =~ lh_inferiorparietal_thickness
+"
+# Do the same for self-report models only
+sr1_l_infpar_cor <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#thickness factor
+l_infpar_fac =~ lh_inferiorparietal_thickness
+"
+
+sr2_l_infpar_cor <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3 + PBIP2
+gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#thickness factor
+l_infpar_fac =~ lh_inferiorparietal_thickness
+"
+# And for hormone models only
+hm1_l_infpar_cor <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+puberty =~ sal_dhea + sal_estr + sal_test + estr_hair
+
+#thickness factor
+l_infpar_fac =~ lh_inferiorparietal_thickness
+"
+
+hm2_l_infpar_cor <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test 
+gonadal =~ sal_estr + estr_hair
+
+#thickness factor
+l_infpar_fac =~ lh_inferiorparietal_thickness
+"
+# Fit models
+fit_fm2v2_l_infpar_cor <- cfa(fm2v2_l_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     ) 
+
+fit_fm1v2_l_infpar_cor <- cfa(fm1v2_l_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+
+fit_sr1_l_infpar_cor <- cfa(sr1_l_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+
+fit_sr2_l_infpar_cor <- cfa(sr2_l_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+fit_hm1_l_infpar_cor <- cfa(hm1_l_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+
+fit_hm2_l_infpar_cor <- cfa(hm2_l_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+
+
+# Summary Stats for models
+summary(fit_fm2v2_l_infpar_cor, fit.measures = T, standardized = T)
+fitmea_fm2v2_l_infpar_cor <- fitmeasures(fit_fm2v2_l_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_fm1v2_l_infpar_cor, fit.measures = T, standardized = T)
+fitmea_fm1v2_l_infpar_cor <- fitmeasures(fit_fm1v2_l_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_sr1_l_infpar_cor, fit.measures = T, standardized = T)
+fitmea_sr1_l_infpar_cor <- fitmeasures(fit_sr1_l_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_sr2_l_infpar_cor, fit.measures = T, standardized = T)
+fitmea_sr2_l_infpar_cor <- fitmeasures(fit_sr2_l_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_hm1_l_infpar_cor, fit.measures = T, standardized = T)
+fitmea_hm1_l_infpar_cor <- fitmeasures(fit_hm1_l_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_hm2_l_infpar_cor, fit.measures = T, standardized = T)
+fitmea_hm2_l_infpar_cor <- fitmeasures(fit_hm2_l_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+fit_fm2v2_l_infpar_cor_parest <- parameterEstimates(fit_fm2v2_l_infpar_cor)
+lavaan:::ctr_pml_plrt(fit_fm2v2_l_infpar_cor)
+
+# Pictoral Representation of FM2v2_l_infpar_cor
+semPaths(fit_fm2v2_l_infpar_cor)
+
+####### right inferior parietal ####### 
+
+# Now build the first one, ADR and GON correlate with thickness 
+# (note that lavaan automatically shows correlations for ADR and GON and thickness)
+fm2v2_r_infpar_cor <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + estr_hair + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#covary observed l_infpar and latent neuroendo systems by tricking lavaan 
+# (remember that lavaan always fixes the first loading to 1)
+r_infpar_fac =~ rh_inferiorparietal_thickness
+"
+
+# Check the thickness correlation with the one factor PUB latent variable, too
+fm1v2_r_infpar_cor <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#BioVars
+pub_bio =~ sal_dhea + sal_estr + sal_test + estr_hair
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+puberty =~ pub_sr + pub_bio
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#thickness factor
+r_infpar_fac =~ rh_inferiorparietal_thickness
+"
+# Do the same for self-report models only
+sr1_r_infpar_cor <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#thickness factor
+r_infpar_fac =~ rh_inferiorparietal_thickness
+"
+
+sr2_r_infpar_cor <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3 + PBIP2
+gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#thickness factor
+r_infpar_fac =~ rh_inferiorparietal_thickness
+"
+
+# And for hormone models only
+hm1_r_infpar_cor <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+puberty =~ sal_dhea + sal_estr + sal_test + estr_hair
+
+#thickness factor
+r_infpar_fac =~ rh_inferiorparietal_thickness
+"
+
+hm2_r_infpar_cor <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test 
+gonadal =~ sal_estr + estr_hair
+
+#thickness factor
+r_infpar_fac =~ rh_inferiorparietal_thickness
+"
+# Fit models
+fit_fm2v2_r_infpar_cor <- cfa(fm2v2_r_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     ) 
+
+fit_fm1v2_r_infpar_cor <- cfa(fm1v2_r_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+
+fit_sr1_r_infpar_cor <- cfa(sr1_r_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+
+fit_sr2_r_infpar_cor <- cfa(sr2_r_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+fit_hm1_r_infpar_cor <- cfa(hm1_r_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+
+fit_hm2_r_infpar_cor <- cfa(hm2_r_infpar_cor, data = data, estimator = "ML", 
+                      missing = "available.cases", verbose = T,  
+                     )
+
+
+# Summary Stats for models
+summary(fit_fm2v2_r_infpar_cor, fit.measures = T, standardized = T)
+fitmea_fm2v2_r_infpar_cor <- fitmeasures(fit_fm2v2_r_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_fm1v2_r_infpar_cor, fit.measures = T, standardized = T)
+fitmea_fm1v2_r_infpar_cor <- fitmeasures(fit_fm1v2_r_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_sr1_r_infpar_cor, fit.measures = T, standardized = T)
+fitmea_sr1_r_infpar_cor <- fitmeasures(fit_sr1_r_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_sr2_r_infpar_cor, fit.measures = T, standardized = T)
+fitmea_sr2_r_infpar_cor <- fitmeasures(fit_sr2_r_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_hm1_r_infpar_cor, fit.measures = T, standardized = T)
+fitmea_hm1_r_infpar_cor <- fitmeasures(fit_hm1_r_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_hm2_r_infpar_cor, fit.measures = T, standardized = T)
+fitmea_hm2_r_infpar_cor <- fitmeasures(fit_hm2_r_infpar_cor, fit.measures = c("cfi","ecvi","mfi"))
+
+
+fit_fm2v2_r_infpar_cor_parest <- parameterEstimates(fit_fm2v2_r_infpar_cor)
+lavaan:::ctr_pml_plrt(fit_fm2v2_r_infpar_cor)
+
+# Pictoral Representation of FM2v2_l_infpar_cor
+semPaths(fit_fm2v2_r_infpar_cor)
 
 ```
 
