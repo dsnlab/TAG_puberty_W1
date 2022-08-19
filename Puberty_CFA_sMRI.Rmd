@@ -1134,7 +1134,7 @@ fit_fm2v3_ml <- cfa(fm2v3, data = data, estimator = "ML",
                      )
 
 
-# Summary Stats for Full Model 1 v3 ML
+# Summary Stats for Full Model 2 v3 ML
 summary(fit_fm2v3_ml, fit.measures = T, standardized = T) 
 fitmea_fm2v3_ml <- fitmeasures(fit_fm2v3_ml,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
@@ -1172,7 +1172,7 @@ agew1s1 <- agew1s1[agevars]
 data_age <- inner_join(agew1s1, data, by = "SID")
 
 #now build the first one, ADR and GON correlate with age (note that lavaan automatically shows correlations for ADR and GON and Agefac)
-fm2v2_agecor <- "
+fm2v3_agecor <- "
 #Latent Variables
 
 #Saliva - Level 1
@@ -1184,9 +1184,9 @@ sal_test =~ test1 + test2 + test3 + test4
 adrenal_sr =~ PDS2 + PDS3 + PBIP2
 gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
 
-#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+#Neuroendocrine Systems (Saliva + Qs) - Level 3
 adrenal =~ sal_dhea + sal_test + adrenal_sr
-gonadal =~ sal_estr + estr_hair + gonadal_sr
+gonadal =~ sal_estr + gonadal_sr
 
 #Covariances for Saliva Sample Day
 dhea1 ~~ estr1 + test1
@@ -1200,9 +1200,11 @@ estr4 ~~ test4
 
 #covary observed age and latent neuroendo systems by tricking lavaan (remember that lavaan always fixes the first loading to 1)
 agefac =~ age
+
 "
+
 #now build the second one, ADR and GON correlate, controlling for age 
-fm2v2_ageres <- "
+fm2v3_ageres <- "
 #Latent Variables
 
 #Saliva - Level 1
@@ -1214,9 +1216,9 @@ sal_test =~ test1 + test2 + test3 + test4
 adrenal_sr =~ PDS2 + PDS3 + PBIP2
 gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
 
-#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+#Neuroendocrine Systems (Saliva + Qs) - Level 3
 adrenal =~ sal_dhea + sal_test + adrenal_sr
-gonadal =~ sal_estr + estr_hair + gonadal_sr
+gonadal =~ sal_estr + gonadal_sr
 
 #Covariances for Saliva Sample Day
 dhea1 ~~ estr1 + test1
@@ -1235,8 +1237,8 @@ agefac =~ age
 adrenal ~ agefac
 gonadal ~ agefac
 "
-# Finally, see if agecor fit is worse if you constrain age correlations to be the same across ADR and GON (because then age is more correlated with one, in this case GON 0.695 vs ADR 0.580)
-fm2v2_agecorcon <- "
+# Finally, see if agecor fit is worse if you constrain age correlations to be the same across ADR and GON 
+fm2v3_agecorcon <- "
 #Latent Variables
 
 #Saliva - Level 1
@@ -1248,9 +1250,9 @@ sal_test =~ test1 + test2 + test3 + test4
 adrenal_sr =~ PDS2 + PDS3 + PBIP2
 gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
 
-#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+#Neuroendocrine Systems (Saliva + Qs) - Level 3
 adrenal =~ sal_dhea + sal_test + adrenal_sr
-gonadal =~ sal_estr + estr_hair + gonadal_sr
+gonadal =~ sal_estr + gonadal_sr
 
 #Covariances for Saliva Sample Day
 dhea1 ~~ estr1 + test1
@@ -1271,7 +1273,7 @@ gonadal ~~ c*agefac
 "
 
 # Check the age correlation with the one factor PUB latent variable, too
-fm1v2_agecor <- "
+fm1v3_agecor <- "
 #Latent Variables
 
 #Saliva - Level 1
@@ -1283,9 +1285,9 @@ sal_test =~ test1 + test2 + test3 + test4
 pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 
 #BioVars
-pub_bio =~ sal_dhea + sal_estr + sal_test + estr_hair
+pub_bio =~ sal_dhea + sal_estr + sal_test 
 
-#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+#Neuroendocrine Systems (Saliva + Qs) - Level 3
 puberty =~ pub_sr + pub_bio
 
 #Covariances for Saliva Sample Day
@@ -1319,110 +1321,41 @@ gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
 agefac =~ age
 "
 
-# SALIVA ONLY (v3) one factor PUB latent variable and age corr
-fm1v3_agecor <- "
-#Latent Variables
 
-#Saliva - Level 1
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-sal_test =~ test1 + test2 + test3 + test4
 
-#Self-Report
-pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
-
-#BioVars
-pub_bio =~ sal_dhea + sal_estr + sal_test
-
-#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
-puberty =~ pub_sr + pub_bio
-
-#Covariances for Saliva Sample Day
-dhea1 ~~ estr1 + test1
-estr1 ~~ test1
-dhea2 ~~ estr2 + test2
-estr2 ~~ test2
-dhea3 ~~ estr3 + test3
-estr3 ~~ test3
-dhea4 ~~ estr4 + test4
-estr4 ~~ test4
-
-#age factor
-agefac =~ age
-"
-
-# Fit fm2v2_agecor, fm2v2_ageres, and fm2v2_agecorcon
-fit_fm2v2_agecor <- cfa(fm2v2_agecor, data = data_age, estimator = "PML", 
-                      missing = "available.cases", verbose = T,  
-                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-                                 "PDS6","PBIP1","PBIP2"))
-fit_fm2v2_ageres <- cfa(fm2v2_ageres, data = data_age, estimator = "PML", 
-                      missing = "available.cases", verbose = T,  
-                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-                                 "PDS6","PBIP1","PBIP2"))
-fit_fm2v2_agecorcon <- cfa(fm2v2_agecorcon, data = data_age, estimator = "PML", 
-                      missing = "available.cases", verbose = T,  
-                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-                                 "PDS6","PBIP1","PBIP2"))
-fit_fm1v2_agecor <- cfa(fm1v2_agecor, data = data_age, estimator = "PML", 
-                      missing = "available.cases", verbose = T,  
-                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-                                 "PDS6","PBIP1","PBIP2"))
-
-fit_sr1_agecor <- cfa(sr1_agecor, data = data_age, estimator = "PML", 
-                      missing = "available.cases", verbose = T,  
-                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-                                 "PDS6","PBIP1","PBIP2"))
-fit_sr2_agecor <- cfa(sr2_agecor, data = data_age, estimator = "PML", 
-                      missing = "available.cases", verbose = T,  
-                     ordered = c("PDS1","PDS2","PDS3","PDS4",
-                                 "PDS6","PBIP1","PBIP2"))
-
-# 2022 update: The above models with age in them no longer converge and I do 
-# not know why, other than it has been 3+ yrs since I last run them. They 
-# work with ML estimator and non-ordered data, so we may use this estimator
-# for the sMRI models below. Addiitionally, I reran the age corr models 
-# without the hair E2 (saliva only, v3), below:
+# Fit fm2v3_agecor, fm2v3_ageres, and fm2v3_agecorcon
+fit_fm2v3_agecor <- cfa(fm2v3_agecor, data = data_age, estimator = "ML", 
+                      missing = "available.cases", verbose = T)
+fit_fm2v3_ageres <- cfa(fm2v3_ageres, data = data_age, estimator = "ML", 
+                      missing = "available.cases", verbose = T)
+fit_fm2v3_agecorcon <- cfa(fm2v3_agecorcon, data = data_age, estimator = "ML", 
+                      missing = "available.cases", verbose = T)
 fit_fm1v3_agecor <- cfa(fm1v3_agecor, data = data_age, estimator = "ML", 
-                      missing = "ML", verbose = T)
+                      missing = "available.cases", verbose = T)
+
+fit_sr1_agecor <- cfa(sr1_agecor, data = data_age, estimator = "ML", 
+                      missing = "available.cases", verbose = T)
+fit_sr2_agecor <- cfa(sr2_agecor, data = data_age, estimator = "ML", 
+                      missing = "available.cases", verbose = T)
+
+
+summary(fit_fm2v3_agecor, fit.measures = T, standardized = T)
+fitmea_fm2v3_agecor <- fitmeasures(fit_fm2v3_agecor, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_fm2v3_ageres, fit.measures = T, standardized = T)
+fitmea_fm2v3_ageres <- fitmeasures(fit_fm2v3_ageres, fit.measures = c("cfi","ecvi","mfi"))
+
+summary(fit_fm2v3_agecorcon, fit.measures = T, standardized = T)
+fitmea_fm2v3_agecorcon <- fitmeasures(fit_fm2v3_agecorcon, fit.measures = c("cfi","ecvi","mfi"))
+
 summary(fit_fm1v3_agecor, fit.measures = T, standardized = T)
 fitmea_fm1v3_agecor <- fitmeasures(fit_fm1v3_agecor, fit.measures = c("cfi","ecvi","mfi"))
-
-# Summary Stats for FM2v2_agecor, FM2v2_ageres, and fm2v2_agecorcon
-summary(fit_fm2v2_agecor, fit.measures = T, standardized = T)
-fitmea_fm2v2_agecor <- fitmeasures(fit_fm2v2_agecor, fit.measures = c("cfi","ecvi","mfi"))
-
-summary(fit_fm2v2_ageres, fit.measures = T, standardized = T)
-fitmea_fm2v2_ageres <- fitmeasures(fit_fm2v2_ageres, fit.measures = c("cfi","ecvi","mfi"))
-
-summary(fit_fm2v2_agecorcon, fit.measures = T, standardized = T)
-fitmea_fm2v2_agecorcon <- fitmeasures(fit_fm2v2_agecorcon, fit.measures = c("cfi","ecvi","mfi"))
-
-summary(fit_fm1v2_agecor, fit.measures = T, standardized = T)
-fitmea_fm1v2_agecor <- fitmeasures(fit_fm1v2_agecor, fit.measures = c("cfi","ecvi","mfi"))
 
 summary(fit_sr1_agecor, fit.measures = T, standardized = T)
 fitmea_sr1_agecor <- fitmeasures(fit_sr1_agecor, fit.measures = c("cfi","ecvi","mfi"))
 
 summary(fit_sr2_agecor, fit.measures = T, standardized = T)
 fitmea_sr2_agecor <- fitmeasures(fit_sr2_agecor, fit.measures = c("cfi","ecvi","mfi"))
-
-fit_fm2v2_agecor_parest <- parameterEstimates(fit_fm2v2_agecor)
-lavaan:::ctr_pml_plrt(fit_fm2v2_agecor)
-
-fit_fm2v2_ageres_parest <- parameterEstimates(fit_fm2v2_ageres)
-lavaan:::ctr_pml_plrt(fit_fm2v2_ageres)
-
-fit_fm2v2_agecorcon_parest <- parameterEstimates(fit_fm2v2_agecorcon)
-lavaan:::ctr_pml_plrt(fit_fm2v2_agecorcon)
-
-# see if agecorcon fits significantly worse than agecor (if so, age is more strongly correlated with GON than ADR)
-anova(fit_fm2v2_agecor, fit_fm2v2_agecorcon)
-lrtest(fit_fm2v2_agecor, fit_fm2v2_agecorcon)
-# Turns out you can't do this because the agecorcon model was not positive-definite:
-lavInspect(fit_fm2v2_agecor, what = "post.check")
-lavInspect(fit_fm2v2_ageres, what = "post.check")
-lavInspect(fit_fm2v2_agecorcon, what = "post.check")
 
 # Pictoral Representation of FM2v2_agecor, FM2v2_ageres, and FM2v2_agecorcon
 semPaths(fit_fm2v2_agecor)
@@ -1479,6 +1412,12 @@ write.csv(pub_corr$P, "Z:/TAG/projects/W1_puberty_modelling/puberty_sMRI/pubsmri
 ########## sMRI POSTHOC ANALYSES ##########
 # Do what we did for age above but for cortical thickness values.
 
+age <- read.csv(file.path(workdir,"Demographics/Age/TAG_age.csv", fsep=""))
+agew1s1 <- age[ which(age$wave=='1' & age$session=='1'), ]
+agevars <- c("SID", "age")
+agew1s1 <- agew1s1[agevars]
+data_age2 <- inner_join(agew1s1, data, by = "SID")
+
 ####### lh_bankssts_thickness ####### 
 
 # Now build the first one, ADR and GON correlate with thickness 
@@ -1514,6 +1453,41 @@ estr4 ~~ test4
 lh_bankssts_fac =~ lh_bankssts_thickness
 "
 
+# Same again but include age in model:
+fm2v3_lh_bankssts_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#covary observed l_infpar and latent neuroendo systems by tricking lavaan 
+# (remember that lavaan always fixes the first loading to 1)
+lh_bankssts_fac =~ lh_bankssts_thickness
+
+#age factor
+agefac =~ age
+"
+
 # Check the thickness correlation with the one factor PUB latent variable, too
 fm1v3_lh_bankssts_cor <- "
 #Latent Variables
@@ -1545,6 +1519,40 @@ estr4 ~~ test4
 #thickness factor
 lh_bankssts_fac =~ lh_bankssts_thickness
 "
+# 1 factor with age
+fm1v3_lh_bankssts_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#BioVars
+pub_bio =~ sal_dhea + sal_estr + sal_test
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+puberty =~ pub_sr + pub_bio
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#thickness factor
+lh_bankssts_fac =~ lh_bankssts_thickness
+
+#age factor
+agefac =~ age
+"
 # Do the same for self-report models only
 sr1_lh_bankssts_cor <- "
 #Latent Neuroendocrine Systems
@@ -1561,6 +1569,29 @@ gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
 
 #thickness factor
 lh_bankssts_fac =~ lh_bankssts_thickness
+"
+# self-report with age
+sr1_lh_bankssts_corage <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#thickness factor
+lh_bankssts_fac =~ lh_bankssts_thickness
+
+#age factor
+agefac =~ age
+"
+
+sr2_lh_bankssts_corage <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3 + PBIP2
+gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#thickness factor
+lh_bankssts_fac =~ lh_bankssts_thickness
+
+#age factor
+agefac =~ age
 "
 
 # And for hormone models only
@@ -1589,38 +1620,81 @@ adrenal =~ sal_dhea + sal_test
 #thickness factor
 lh_bankssts_fac =~ lh_bankssts_thickness
 "
+
+# hormones and age
+hm1_lh_bankssts_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+puberty =~ sal_dhea + sal_estr + sal_test
+
+#thickness factor
+lh_bankssts_fac =~ lh_bankssts_thickness
+
+#age factor
+agefac =~ age
+"
+
+hm2_lh_bankssts_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test 
+
+#thickness factor
+lh_bankssts_fac =~ lh_bankssts_thickness
+
+#age factor
+agefac =~ age
+"
 # Fit models
 fit_fm2v3_lh_bankssts_cor <- cfa(fm2v3_lh_bankssts_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     ) 
+                      missing = "ML", verbose = T) 
+
+fit_fm2v3_lh_bankssts_corage <- cfa(fm2v3_lh_bankssts_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
 
 fit_fm1v3_lh_bankssts_cor <- cfa(fm1v3_lh_bankssts_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
-
+                      missing = "ML", verbose = T)
+fit_fm1v3_lh_bankssts_corage <- cfa(fm1v3_lh_bankssts_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
 fit_sr1_lh_bankssts_cor <- cfa(sr1_lh_bankssts_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
-
+                      missing = "ML", verbose = T)
+fit_sr1_lh_bankssts_corage <- cfa(sr1_lh_bankssts_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
 fit_sr2_lh_bankssts_cor <- cfa(sr2_lh_bankssts_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
+                      missing = "ML", verbose = T)
+fit_sr2_lh_bankssts_corage <- cfa(sr2_lh_bankssts_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
 fit_hm1_lh_bankssts_cor <- cfa(hm1_lh_bankssts_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
-
+                      missing = "ML", verbose = T)
+fit_hm1_lh_bankssts_corage <- cfa(hm1_lh_bankssts_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
 fit_hm2_lh_bankssts_cor <- cfa(hm2_lh_bankssts_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
+                      missing = "ML", verbose = T)
+fit_hm2_lh_bankssts_corage <- cfa(hm2_lh_bankssts_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
 
 
 # Summary Stats for models
 summary(fit_fm2v3_lh_bankssts_cor, fit.measures = T, standardized = T)
+summary(fit_fm2v3_lh_bankssts_corage, fit.measures = T, standardized = T)
 summary(fit_fm1v3_lh_bankssts_cor, fit.measures = T, standardized = T)
+summary(fit_fm1v3_lh_bankssts_corage, fit.measures = T, standardized = T)
 summary(fit_sr1_lh_bankssts_cor, fit.measures = T, standardized = T)
 summary(fit_sr2_lh_bankssts_cor, fit.measures = T, standardized = T)
 summary(fit_hm1_lh_bankssts_cor, fit.measures = T, standardized = T)
 summary(fit_hm2_lh_bankssts_cor, fit.measures = T, standardized = T)
+summary(fit_sr1_lh_bankssts_corage, fit.measures = T, standardized = T)
+summary(fit_sr2_lh_bankssts_corage, fit.measures = T, standardized = T)
+summary(fit_hm1_lh_bankssts_corage, fit.measures = T, standardized = T)
+summary(fit_hm2_lh_bankssts_corage, fit.measures = T, standardized = T)
 
 ####### lh_caudalanteriorcingulate_thickness ####### 
 
@@ -1657,6 +1731,38 @@ estr4 ~~ test4
 lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
 "
 
+fm2v3_lh_caudalanteriorcingulate_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#covary observed l_infpar and latent neuroendo systems by tricking lavaan 
+# (remember that lavaan always fixes the first loading to 1)
+lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
+#age factor
+agefac =~ age
+"
 # Check the thickness correlation with the one factor PUB latent variable, too
 fm1v3_lh_caudalanteriorcingulate_cor <- "
 #Latent Variables
@@ -1688,6 +1794,39 @@ estr4 ~~ test4
 #thickness factor
 lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
 "
+
+fm1v3_lh_caudalanteriorcingulate_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#BioVars
+pub_bio =~ sal_dhea + sal_estr + sal_test
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+puberty =~ pub_sr + pub_bio
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#thickness factor
+lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
+#age factor
+agefac =~ age
+"
 # Do the same for self-report models only
 sr1_lh_caudalanteriorcingulate_cor <- "
 #Latent Neuroendocrine Systems
@@ -1697,6 +1836,16 @@ puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
 "
 
+sr1_lh_caudalanteriorcingulate_corage <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#thickness factor
+lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
+#age factor
+agefac =~ age
+"
+
 sr2_lh_caudalanteriorcingulate_cor <- "
 #Latent Neuroendocrine Systems
 adrenal =~ PDS2 + PDS3 + PBIP2
@@ -1704,6 +1853,17 @@ gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
 
 #thickness factor
 lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
+"
+
+sr2_lh_caudalanteriorcingulate_corage <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3 + PBIP2
+gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#thickness factor
+lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
+#age factor
+agefac =~ age
 "
 
 # And for hormone models only
@@ -1720,6 +1880,21 @@ puberty =~ sal_dhea + sal_estr + sal_test
 lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
 "
 
+hm1_lh_caudalanteriorcingulate_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+puberty =~ sal_dhea + sal_estr + sal_test
+
+#thickness factor
+lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
+#age factor
+agefac =~ age
+"
+
 hm2_lh_caudalanteriorcingulate_cor <- "
 #Saliva - Level 1
 sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
@@ -1731,6 +1906,21 @@ adrenal =~ sal_dhea + sal_test
 
 #thickness factor
 lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
+"
+
+hm2_lh_caudalanteriorcingulate_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test 
+
+#thickness factor
+lh_caudalanteriorcingulate_fac =~ lh_caudalanteriorcingulate_thickness
+#age factor
+agefac =~ age
 "
 # Fit models
 fit_fm2v3_lh_caudalanteriorcingulate_cor <- cfa(fm2v3_lh_caudalanteriorcingulate_cor, data = data, estimator = "ML", 
@@ -1745,6 +1935,19 @@ fit_hm1_lh_caudalanteriorcingulate_cor <- cfa(hm1_lh_caudalanteriorcingulate_cor
                       missing = "ML", verbose = T)
 fit_hm2_lh_caudalanteriorcingulate_cor <- cfa(hm2_lh_caudalanteriorcingulate_cor, data = data, estimator = "ML", 
                       missing = "ML", verbose = T)
+
+fit_fm2v3_lh_caudalanteriorcingulate_corage <- cfa(fm2v3_lh_caudalanteriorcingulate_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_fm1v3_lh_caudalanteriorcingulate_corage <- cfa(fm1v3_lh_caudalanteriorcingulate_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_sr1_lh_caudalanteriorcingulate_corage <- cfa(sr1_lh_caudalanteriorcingulate_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_sr2_lh_caudalanteriorcingulate_corage <- cfa(sr2_lh_caudalanteriorcingulate_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_hm1_lh_caudalanteriorcingulate_corage <- cfa(hm1_lh_caudalanteriorcingulate_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_hm2_lh_caudalanteriorcingulate_corage <- cfa(hm2_lh_caudalanteriorcingulate_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
 # Summary Stats for models
 summary(fit_fm2v3_lh_caudalanteriorcingulate_cor, fit.measures = T, standardized = T)
 summary(fit_fm1v3_lh_caudalanteriorcingulate_cor, fit.measures = T, standardized = T)
@@ -1752,6 +1955,13 @@ summary(fit_sr1_lh_caudalanteriorcingulate_cor, fit.measures = T, standardized =
 summary(fit_sr2_lh_caudalanteriorcingulate_cor, fit.measures = T, standardized = T)
 summary(fit_hm1_lh_caudalanteriorcingulate_cor, fit.measures = T, standardized = T)
 summary(fit_hm2_lh_caudalanteriorcingulate_cor, fit.measures = T, standardized = T)
+
+summary(fit_fm2v3_lh_caudalanteriorcingulate_corage, fit.measures = T, standardized = T)
+summary(fit_fm1v3_lh_caudalanteriorcingulate_corage, fit.measures = T, standardized = T)
+summary(fit_sr1_lh_caudalanteriorcingulate_corage, fit.measures = T, standardized = T)
+summary(fit_sr2_lh_caudalanteriorcingulate_corage, fit.measures = T, standardized = T)
+summary(fit_hm1_lh_caudalanteriorcingulate_corage, fit.measures = T, standardized = T)
+summary(fit_hm2_lh_caudalanteriorcingulate_corage, fit.measures = T, standardized = T)
 
 ####### lh_caudalmiddlefrontal_thickness ####### 
 
@@ -1788,6 +1998,40 @@ estr4 ~~ test4
 lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
 "
 
+fm2v3_lh_caudalmiddlefrontal_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#covary observed l_infpar and latent neuroendo systems by tricking lavaan 
+# (remember that lavaan always fixes the first loading to 1)
+lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
+
+#age factor
+agefac =~ age
+"
+
 # Check the thickness correlation with the one factor PUB latent variable, too
 fm1v3_lh_caudalmiddlefrontal_cor <- "
 #Latent Variables
@@ -1819,6 +2063,39 @@ estr4 ~~ test4
 #thickness factor
 lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
 "
+
+fm1v3_lh_caudalmiddlefrontal_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#BioVars
+pub_bio =~ sal_dhea + sal_estr + sal_test
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+puberty =~ pub_sr + pub_bio
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#thickness factor
+lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
+#age factor
+agefac =~ age
+"
 # Do the same for self-report models only
 sr1_lh_caudalmiddlefrontal_cor <- "
 #Latent Neuroendocrine Systems
@@ -1828,6 +2105,16 @@ puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
 "
 
+sr1_lh_caudalmiddlefrontal_corage <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#thickness factor
+lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
+#age factor
+agefac =~ age
+"
+
 sr2_lh_caudalmiddlefrontal_cor <- "
 #Latent Neuroendocrine Systems
 adrenal =~ PDS2 + PDS3 + PBIP2
@@ -1835,6 +2122,17 @@ gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
 
 #thickness factor
 lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
+"
+
+sr2_lh_caudalmiddlefrontal_corage <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3 + PBIP2
+gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#thickness factor
+lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
+#age factor
+agefac =~ age
 "
 
 # And for hormone models only
@@ -1851,6 +2149,21 @@ puberty =~ sal_dhea + sal_estr + sal_test
 lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
 "
 
+hm1_lh_caudalmiddlefrontal_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+puberty =~ sal_dhea + sal_estr + sal_test
+
+#thickness factor
+lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
+#age factor
+agefac =~ age
+"
+
 hm2_lh_caudalmiddlefrontal_cor <- "
 #Saliva - Level 1
 sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
@@ -1862,6 +2175,21 @@ adrenal =~ sal_dhea + sal_test
 
 #thickness factor
 lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
+"
+
+hm2_lh_caudalmiddlefrontal_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test 
+
+#thickness factor
+lh_caudalmiddlefrontal_fac =~ lh_caudalmiddlefrontal_thickness
+#age factor
+agefac =~ age
 "
 # Fit models
 fit_fm2v3_lh_caudalmiddlefrontal_cor <- cfa(fm2v3_lh_caudalmiddlefrontal_cor, data = data, estimator = "ML", 
@@ -1877,6 +2205,19 @@ fit_hm1_lh_caudalmiddlefrontal_cor <- cfa(hm1_lh_caudalmiddlefrontal_cor, data =
 fit_hm2_lh_caudalmiddlefrontal_cor <- cfa(hm2_lh_caudalmiddlefrontal_cor, data = data, estimator = "ML", 
                       missing = "ML", verbose = T)
 
+fit_fm2v3_lh_caudalmiddlefrontal_corage <- cfa(fm2v3_lh_caudalmiddlefrontal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_fm1v3_lh_caudalmiddlefrontal_corage <- cfa(fm1v3_lh_caudalmiddlefrontal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_sr1_lh_caudalmiddlefrontal_corage <- cfa(sr1_lh_caudalmiddlefrontal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_sr2_lh_caudalmiddlefrontal_corage <- cfa(sr2_lh_caudalmiddlefrontal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_hm1_lh_caudalmiddlefrontal_corage <- cfa(hm1_lh_caudalmiddlefrontal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_hm2_lh_caudalmiddlefrontal_corage <- cfa(hm2_lh_caudalmiddlefrontal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+
 # Summary Stats for models
 summary(fit_fm2v3_lh_caudalmiddlefrontal_cor, fit.measures = T, standardized = T)
 summary(fit_fm1v3_lh_caudalmiddlefrontal_cor, fit.measures = T, standardized = T)
@@ -1884,6 +2225,13 @@ summary(fit_sr1_lh_caudalmiddlefrontal_cor, fit.measures = T, standardized = T)
 summary(fit_sr2_lh_caudalmiddlefrontal_cor, fit.measures = T, standardized = T)
 summary(fit_hm1_lh_caudalmiddlefrontal_cor, fit.measures = T, standardized = T)
 summary(fit_hm2_lh_caudalmiddlefrontal_cor, fit.measures = T, standardized = T)
+
+summary(fit_fm2v3_lh_caudalmiddlefrontal_corage, fit.measures = T, standardized = T)
+summary(fit_fm1v3_lh_caudalmiddlefrontal_corage, fit.measures = T, standardized = T)
+summary(fit_sr1_lh_caudalmiddlefrontal_corage, fit.measures = T, standardized = T)
+summary(fit_sr2_lh_caudalmiddlefrontal_corage, fit.measures = T, standardized = T)
+summary(fit_hm1_lh_caudalmiddlefrontal_corage, fit.measures = T, standardized = T)
+summary(fit_hm2_lh_caudalmiddlefrontal_corage, fit.measures = T, standardized = T)
 
 ####### lh_cuneus_thickness ####### 
 
@@ -1920,6 +2268,38 @@ estr4 ~~ test4
 lh_cuneus_fac =~ lh_cuneus_thickness
 "
 
+fm2v3_lh_cuneus_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#covary observed l_infpar and latent neuroendo systems by tricking lavaan 
+# (remember that lavaan always fixes the first loading to 1)
+lh_cuneus_fac =~ lh_cuneus_thickness
+#age factor
+agefac =~ age
+"
 # Check the thickness correlation with the one factor PUB latent variable, too
 fm1v3_lh_cuneus_cor <- "
 #Latent Variables
@@ -1951,6 +2331,39 @@ estr4 ~~ test4
 #thickness factor
 lh_cuneus_fac =~ lh_cuneus_thickness
 "
+
+fm1v3_lh_cuneus_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#BioVars
+pub_bio =~ sal_dhea + sal_estr + sal_test
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+puberty =~ pub_sr + pub_bio
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#thickness factor
+lh_cuneus_fac =~ lh_cuneus_thickness
+#age factor
+agefac =~ age
+"
 # Do the same for self-report models only
 sr1_lh_cuneus_cor <- "
 #Latent Neuroendocrine Systems
@@ -1958,6 +2371,15 @@ puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 
 #thickness factor
 lh_cuneus_fac =~ lh_cuneus_thickness
+"
+sr1_lh_cuneus_corage <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#thickness factor
+lh_cuneus_fac =~ lh_cuneus_thickness
+#age factor
+agefac =~ age
 "
 
 sr2_lh_cuneus_cor <- "
@@ -1967,6 +2389,16 @@ gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
 
 #thickness factor
 lh_cuneus_fac =~ lh_cuneus_thickness
+"
+sr2_lh_cuneus_corage <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3 + PBIP2
+gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#thickness factor
+lh_cuneus_fac =~ lh_cuneus_thickness
+#age factor
+agefac =~ age
 "
 
 # And for hormone models only
@@ -1982,6 +2414,20 @@ puberty =~ sal_dhea + sal_estr + sal_test
 #thickness factor
 lh_cuneus_fac =~ lh_cuneus_thickness
 "
+hm1_lh_cuneus_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+puberty =~ sal_dhea + sal_estr + sal_test
+
+#thickness factor
+lh_cuneus_fac =~ lh_cuneus_thickness
+#age factor
+agefac =~ age
+"
 
 hm2_lh_cuneus_cor <- "
 #Saliva - Level 1
@@ -1995,29 +2441,47 @@ adrenal =~ sal_dhea + sal_test
 #thickness factor
 lh_cuneus_fac =~ lh_cuneus_thickness
 "
+hm2_lh_cuneus_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test 
+
+#thickness factor
+lh_cuneus_fac =~ lh_cuneus_thickness
+#age factor
+agefac =~ age
+"
+
 # Fit models
 fit_fm2v3_lh_cuneus_cor <- cfa(fm2v3_lh_cuneus_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     ) 
-
+                      missing = "ML", verbose = T) 
 fit_fm1v3_lh_cuneus_cor <- cfa(fm1v3_lh_cuneus_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
-
+                      missing = "ML", verbose = T)
 fit_sr1_lh_cuneus_cor <- cfa(sr1_lh_cuneus_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
-
+                      missing = "ML", verbose = T)
 fit_sr2_lh_cuneus_cor <- cfa(sr2_lh_cuneus_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
+                      missing = "ML", verbose = T)
 fit_hm1_lh_cuneus_cor <- cfa(hm1_lh_cuneus_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
-
+                      missing = "ML", verbose = T)
 fit_hm2_lh_cuneus_cor <- cfa(hm2_lh_cuneus_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
+                      missing = "ML", verbose = T)
+
+fit_fm2v3_lh_cuneus_corage <- cfa(fm2v3_lh_cuneus_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T) 
+fit_fm1v3_lh_cuneus_corage <- cfa(fm1v3_lh_cuneus_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_sr1_lh_cuneus_corage <- cfa(sr1_lh_cuneus_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_sr2_lh_cuneus_corage <- cfa(sr2_lh_cuneus_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_hm1_lh_cuneus_corage <- cfa(hm1_lh_cuneus_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_hm2_lh_cuneus_corage <- cfa(hm2_lh_cuneus_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
 
 
 # Summary Stats for models
@@ -2027,6 +2491,13 @@ summary(fit_sr1_lh_cuneus_cor, fit.measures = T, standardized = T)
 summary(fit_sr2_lh_cuneus_cor, fit.measures = T, standardized = T)
 summary(fit_hm1_lh_cuneus_cor, fit.measures = T, standardized = T)
 summary(fit_hm2_lh_cuneus_cor, fit.measures = T, standardized = T)
+
+summary(fit_fm2v3_lh_cuneus_corage, fit.measures = T, standardized = T)
+summary(fit_fm1v3_lh_cuneus_corage, fit.measures = T, standardized = T)
+summary(fit_sr1_lh_cuneus_corage, fit.measures = T, standardized = T)
+summary(fit_sr2_lh_cuneus_corage, fit.measures = T, standardized = T)
+summary(fit_hm1_lh_cuneus_corage, fit.measures = T, standardized = T)
+summary(fit_hm2_lh_cuneus_corage, fit.measures = T, standardized = T)
 
 ####### lh_entorhinal_thickness ####### 
 
@@ -2063,6 +2534,39 @@ estr4 ~~ test4
 lh_entorhinal_fac =~ lh_entorhinal_thickness
 "
 
+fm2v3_lh_entorhinal_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+adrenal_sr =~ PDS2 + PDS3 + PBIP2
+gonadal_sr =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+adrenal =~ sal_dhea + sal_test + adrenal_sr
+gonadal =~ sal_estr + gonadal_sr
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#covary observed l_infpar and latent neuroendo systems by tricking lavaan 
+# (remember that lavaan always fixes the first loading to 1)
+lh_entorhinal_fac =~ lh_entorhinal_thickness
+#age factor
+agefac =~ age
+"
+
 # Check the thickness correlation with the one factor PUB latent variable, too
 fm1v3_lh_entorhinal_cor <- "
 #Latent Variables
@@ -2094,6 +2598,39 @@ estr4 ~~ test4
 #thickness factor
 lh_entorhinal_fac =~ lh_entorhinal_thickness
 "
+
+fm1v3_lh_entorhinal_corage <- "
+#Latent Variables
+
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Self-Report
+pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#BioVars
+pub_bio =~ sal_dhea + sal_estr + sal_test
+
+#Neuroendocrine Systems (Saliva + Hair + Qs) - Level 3
+puberty =~ pub_sr + pub_bio
+
+#Covariances for Saliva Sample Day
+dhea1 ~~ estr1 + test1
+estr1 ~~ test1
+dhea2 ~~ estr2 + test2
+estr2 ~~ test2
+dhea3 ~~ estr3 + test3
+estr3 ~~ test3
+dhea4 ~~ estr4 + test4
+estr4 ~~ test4
+
+#thickness factor
+lh_entorhinal_fac =~ lh_entorhinal_thickness
+#age factor
+agefac =~ age
+"
 # Do the same for self-report models only
 sr1_lh_entorhinal_cor <- "
 #Latent Neuroendocrine Systems
@@ -2101,6 +2638,15 @@ puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
 
 #thickness factor
 lh_entorhinal_fac =~ lh_entorhinal_thickness
+"
+sr1_lh_entorhinal_corage <- "
+#Latent Neuroendocrine Systems
+puberty =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
+
+#thickness factor
+lh_entorhinal_fac =~ lh_entorhinal_thickness
+#age factor
+agefac =~ age
 "
 
 sr2_lh_entorhinal_cor <- "
@@ -2110,6 +2656,16 @@ gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
 
 #thickness factor
 lh_entorhinal_fac =~ lh_entorhinal_thickness
+"
+sr2_lh_entorhinal_corage <- "
+#Latent Neuroendocrine Systems
+adrenal =~ PDS2 + PDS3 + PBIP2
+gonadal =~ PDS1 + PDS4 + PDS6 + PBIP1
+
+#thickness factor
+lh_entorhinal_fac =~ lh_entorhinal_thickness
+#age factor
+agefac =~ age
 "
 
 # And for hormone models only
@@ -2125,6 +2681,20 @@ puberty =~ sal_dhea + sal_estr + sal_test
 #thickness factor
 lh_entorhinal_fac =~ lh_entorhinal_thickness
 "
+hm1_lh_entorhinal_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+puberty =~ sal_dhea + sal_estr + sal_test
+
+#thickness factor
+lh_entorhinal_fac =~ lh_entorhinal_thickness
+#age factor
+agefac =~ age
+"
 
 hm2_lh_entorhinal_cor <- "
 #Saliva - Level 1
@@ -2138,30 +2708,46 @@ adrenal =~ sal_dhea + sal_test
 #thickness factor
 lh_entorhinal_fac =~ lh_entorhinal_thickness
 "
+hm2_lh_entorhinal_corage <- "
+#Saliva - Level 1
+sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
+sal_estr =~ estr1 + estr2 + estr3 + estr4
+sal_test =~ test1 + test2 + test3 + test4
+
+#Latent Neuroendocrine Systems
+adrenal =~ sal_dhea + sal_test 
+
+#thickness factor
+lh_entorhinal_fac =~ lh_entorhinal_thickness
+#age factor
+agefac =~ age
+"
 # Fit models
 fit_fm2v3_lh_entorhinal_cor <- cfa(fm2v3_lh_entorhinal_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     ) 
-
+                      missing = "ML", verbose = T) 
 fit_fm1v3_lh_entorhinal_cor <- cfa(fm1v3_lh_entorhinal_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
-
+                      missing = "ML", verbose = T)
 fit_sr1_lh_entorhinal_cor <- cfa(sr1_lh_entorhinal_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
-
+                      missing = "ML", verbose = T)
 fit_sr2_lh_entorhinal_cor <- cfa(sr2_lh_entorhinal_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
+                      missing = "ML", verbose = T)
 fit_hm1_lh_entorhinal_cor <- cfa(hm1_lh_entorhinal_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
-
+                      missing = "ML", verbose = T)
 fit_hm2_lh_entorhinal_cor <- cfa(hm2_lh_entorhinal_cor, data = data, estimator = "ML", 
-                      missing = "ML", verbose = T,  
-                     )
+                      missing = "ML", verbose = T)
 
+fit_fm2v3_lh_entorhinal_corage <- cfa(fm2v3_lh_entorhinal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T) 
+fit_fm1v3_lh_entorhinal_corage <- cfa(fm1v3_lh_entorhinal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_sr1_lh_entorhinal_corage <- cfa(sr1_lh_entorhinal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_sr2_lh_entorhinal_corage <- cfa(sr2_lh_entorhinal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_hm1_lh_entorhinal_corage <- cfa(hm1_lh_entorhinal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
+fit_hm2_lh_entorhinal_corage <- cfa(hm2_lh_entorhinal_corage, data = data_age2, estimator = "ML", 
+                      missing = "ML", verbose = T)
 
 # Summary Stats for models
 summary(fit_fm2v3_lh_entorhinal_cor, fit.measures = T, standardized = T)
@@ -2170,6 +2756,13 @@ summary(fit_sr1_lh_entorhinal_cor, fit.measures = T, standardized = T)
 summary(fit_sr2_lh_entorhinal_cor, fit.measures = T, standardized = T)
 summary(fit_hm1_lh_entorhinal_cor, fit.measures = T, standardized = T)
 summary(fit_hm2_lh_entorhinal_cor, fit.measures = T, standardized = T)
+
+summary(fit_fm2v3_lh_entorhinal_corage, fit.measures = T, standardized = T)
+summary(fit_fm1v3_lh_entorhinal_corage, fit.measures = T, standardized = T)
+summary(fit_sr1_lh_entorhinal_corage, fit.measures = T, standardized = T)
+summary(fit_sr2_lh_entorhinal_corage, fit.measures = T, standardized = T)
+summary(fit_hm1_lh_entorhinal_corage, fit.measures = T, standardized = T)
+summary(fit_hm2_lh_entorhinal_corage, fit.measures = T, standardized = T)
 
 ####### lh_fusiform_thickness ####### 
 
