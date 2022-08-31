@@ -1413,7 +1413,20 @@ write.csv(pub_corr$P, "Z:/TAG/projects/W1_puberty_modelling/puberty_sMRI/pubsmri
 # One reviewer suggested looking at how much each sample (day) correlated within hormones, and whether this changed by pubertal stage
 # Below, we fit data to additional SEM models separately by hormone to assess how well they fit onto a latent factor; 
 # the loadings tell us how each sample (day of saliva collection) fits. 
-# Additional models per hormone were also fit with the latent “self-report” variable included (with all indicators, PDS and LDs). 
+# Additional models per hormone were also fit with the sample separated into high and low Tanner stage. 
+
+Timing_allways_w1_forsMRI <- read_csv("Z:/TAG/projects/W1_W2_pubertal_timing/Timing_allways_w1_forsMRI.csv")
+pubvars2 <- c("SID","pdsstage")
+pdsstage <- Timing_allways_w1_forsMRI[pubvars2]
+data_pds <- merge(
+  x = data,
+  y = pdsstage,
+  by = "SID",
+  all = FALSE)
+
+median(data_pds$pdsstage, na.rm = TRUE)
+tanner_high <- data[which(data_pds$pdsstage >= 3), ]
+tanner_low <- data[which(data_pds$pdsstage < 3), ]
 
 #DHEA
 DHEA_noSR <- "
@@ -1423,28 +1436,26 @@ sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
 
 "
 
-DHEA_withSR <- "
-
-#Saliva - Day
-sal_dhea =~ dhea1 + dhea2 + dhea3 + dhea4
-
-#Self-Report
-pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
-
-"
-# Fit DHEA_noSR
+# Fit DHEA everyone
 fit_DHEA_noSR <- cfa(DHEA_noSR, data = data, estimator = "ML", 
                       missing = "ML", verbose = T)
 summary(fit_DHEA_noSR, fit.measures = T, standardized = T) 
 fitmea_fit_DHEA_noSR <- fitmeasures(fit_DHEA_noSR,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr")) 
 
-# Fit DHEA_withSR 
-fit_DHEA_withSR_ml <- cfa(DHEA_withSR, data = data, estimator = "ML", 
+# Fit DHEA high tanner
+fit_DHEA_tannerhigh <- cfa(DHEA_noSR, data = tanner_high, estimator = "ML", 
                       missing = "ML", verbose = T)
-summary(fit_DHEA_withSR_ml, fit.measures = T, standardized = T) 
-fitmea_fit_DHEA_withSR_ml <- fitmeasures(fit_DHEA_withSR_ml,
-            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr")) 
+summary(fit_DHEA_tannerhigh, fit.measures = T, standardized = T) 
+fitmea_fit_DHEA_tannerhigh <- fitmeasures(fit_DHEA_tannerhigh,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
+
+# Fit DHEA low tanner
+fit_DHEA_tannerlow <- cfa(DHEA_noSR, data = tanner_low, estimator = "ML", 
+                      missing = "ML", verbose = T)
+summary(fit_DHEA_tannerlow, fit.measures = T, standardized = T) 
+fitmea_fit_DHEA_tannerlow <- fitmeasures(fit_DHEA_tannerlow,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
 
 #Testosterone
 T_noSR <- "
@@ -1454,28 +1465,26 @@ sal_test =~ test1 + test2 + test3 + test4
 
 "
 
-T_withSR <- "
-
-#Saliva - Day
-sal_test =~ test1 + test2 + test3 + test4
-
-#Self-Report
-pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
-
-"
-# Fit T_noSR
+# Fit T everyone
 fit_T_noSR <- cfa(T_noSR, data = data, estimator = "ML", 
                       missing = "ML", verbose = T)
 summary(fit_T_noSR, fit.measures = T, standardized = T) 
 fitmea_fit_T_noSR <- fitmeasures(fit_T_noSR,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr")) 
 
-# Fit T_withSR 
-fit_T_withSR_ml <- cfa(T_withSR, data = data, estimator = "ML", 
+# Fit T high tanner
+fit_T_tannerhigh <- cfa(T_noSR, data = tanner_high, estimator = "ML", 
                       missing = "ML", verbose = T)
-summary(fit_T_withSR_ml, fit.measures = T, standardized = T) 
-fitmea_fit_T_withSR_ml <- fitmeasures(fit_T_withSR_ml,
-            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr")) 
+summary(fit_T_tannerhigh, fit.measures = T, standardized = T) 
+fitmea_fit_T_tannerhigh <- fitmeasures(fit_T_tannerhigh,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
+
+# Fit T low tanner
+fit_T_tannerlow <- cfa(T_noSR, data = tanner_low, estimator = "ML", 
+                      missing = "ML", verbose = T)
+summary(fit_T_tannerlow, fit.measures = T, standardized = T) 
+fitmea_fit_T_tannerlow <- fitmeasures(fit_T_tannerlow,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
 
 #E2
 E2_noSR <- "
@@ -1485,28 +1494,26 @@ sal_estr =~ estr1 + estr2 + estr3 + estr4
 
 "
 
-E2_withSR <- "
-
-#Saliva - Day
-sal_estr =~ estr1 + estr2 + estr3 + estr4
-
-#Self-Report
-pub_sr =~ PDS1 + PDS2 + PDS3 + PDS4 + PDS6 + PBIP1 + PBIP2
-
-"
-# Fit E2_noSR
+# Fit E2 everyone
 fit_E2_noSR <- cfa(E2_noSR, data = data, estimator = "ML", 
                       missing = "ML", verbose = T)
 summary(fit_E2_noSR, fit.measures = T, standardized = T) 
 fitmea_fit_E2_noSR <- fitmeasures(fit_E2_noSR,
             fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr")) 
 
-# Fit E2_withSR 
-fit_E2_withSR_ml <- cfa(E2_withSR, data = data, estimator = "ML", 
+# Fit E2 high tanner
+fit_E2_tannerhigh <- cfa(E2_noSR, data = tanner_high, estimator = "ML", 
                       missing = "ML", verbose = T)
-summary(fit_E2_withSR_ml, fit.measures = T, standardized = T) 
-fitmea_fit_E2_withSR_ml <- fitmeasures(fit_E2_withSR_ml,
-            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr")) 
+summary(fit_E2_tannerhigh, fit.measures = T, standardized = T) 
+fitmea_fit_E2_tannerhigh <- fitmeasures(fit_E2_tannerhigh,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
+
+# Fit E2 low tanner
+fit_E2_tannerlow <- cfa(E2_noSR, data = tanner_low, estimator = "ML", 
+                      missing = "ML", verbose = T)
+summary(fit_E2_tannerlow, fit.measures = T, standardized = T) 
+fitmea_fit_E2_tannerlow <- fitmeasures(fit_E2_tannerlow,
+            fit.measures = c("cfi","ecvi","mfi", "chisq", "pvalue", "rmsea", "srmr"))
 
 ```
 
